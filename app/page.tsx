@@ -54,6 +54,107 @@ export default function Home() {
             <div className="text-left">🚀 On-chain Actions Earn Rewards</div>
           </div>
         </div>
+        
+        {/* New productivity features section */}
+        <section className="w-full mt-20 mb-10">
+          <h2 className="text-4xl font-bold mb-12 text-[#222] text-center">Track Your Blockchain Journey</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Feature 1 */}
+            <div className="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300 w-full border-l-4 border-[#ff6f61]">
+              <div className="flex items-start mb-4">
+                <div className="bg-[#ff6f61] rounded-full p-2 mr-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-2xl font-bold text-[#333] text-left">Connect daily to earn XP</h3>
+              </div>
+              <div className="pl-12 text-left">
+                <p className="text-[#555] mb-3 leading-relaxed">
+                  Each day you connect, Solana Companion will analyze your activity and reward you with XP.
+                </p>
+                <p className="text-[#555] mb-3 leading-relaxed">
+                  When you are on a streak, your Companion will be in a good mood!
+                </p>
+                <p className="text-[#555] mb-3 leading-relaxed">
+                  However if you don't connect for a while, your Companion will get upset and you will lose your streak...
+                </p>
+                <p className="text-[#555] leading-relaxed">
+                  The more XP you earn, the more your Companion will evolve and you will be able to unlock new customizations!
+                </p>
+              </div>
+            </div>
+            
+            {/* Feature 2 */} 
+            <div className="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300 w-full border-l-4 border-[#6c5ce7]">
+              <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+                <div className="flex-1">
+                  <div className="flex items-start mb-4">
+                    <div className="bg-[#6c5ce7] rounded-full p-2 mr-4">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-2xl font-bold text-[#333] text-left">Take your companion everywhere</h3>
+                  </div>
+                  <div className="pl-12 text-left">
+                    <p className="text-[#555] mb-3 leading-relaxed">
+                      Your Solana Companion is always with you, no matter what device you're using.
+                    </p>
+                    <p className="text-[#555] mb-3 leading-relaxed">
+                      Seamlessly switch between your phone, tablet, or desktop - your companion's progress syncs automatically.
+                    </p>
+                    <p className="text-[#555] leading-relaxed">
+                      The responsive design ensures your companion looks great on any screen size!
+                    </p>
+                  </div>
+                </div>
+                <div className="flex-shrink-0 md:w-1/3 flex justify-center">
+                  <Image
+                    src="/mobile_mockup.png" 
+                    alt="Mobile app mockup"
+                    width={180}
+                    height={360}
+                    className="shadow-lg rounded-lg object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.onerror = null;
+                      target.src = "https://placehold.co/180x360/6c5ce7/white?text=App+Preview";
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+            
+            {/* Feature 3 */}
+            <div className="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300 w-full border-l-4 border-[#00b894]">
+              <div className="flex items-start mb-4">
+                <div className="bg-[#00b894] rounded-full p-2 mr-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </div>
+                <h3 className="text-2xl font-bold text-[#333] text-left">Customize your Companion</h3>
+              </div>
+              <div className="pl-12 text-left">
+                <p className="text-[#555] mb-3 leading-relaxed">
+                  Make your Companion truly yours with a wide range of customization options.
+                </p>
+                <p className="text-[#555] mb-3 leading-relaxed">
+                  Unlock new accessories, colors, and styles as you level up and complete challenges.
+                </p>
+                <p className="text-[#555] mb-3 leading-relaxed">
+                  Show off your unique Companion to friends and the Solana community!
+                </p>
+                <p className="text-[#555] leading-relaxed">
+                  Some rare customizations can only be unlocked through special on-chain achievements.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
       
       <footer className="text-center text-xs text-[#777] mt-10">
