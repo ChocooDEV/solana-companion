@@ -28,23 +28,34 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Use Helius AI Transaction Explainer
+    // Get transaction type and summary from Orb API
+    let type = 'Transaction';
+    let summary = 'Transaction details';
+    
     try {
-      const aiExplanation = await getHeliusAIExplanation(transaction, 'mainnet-beta');
-      if (aiExplanation) {
-        return NextResponse.json(aiExplanation);
-      } else {
-        return NextResponse.json(
-          { type: 'Transaction', summary: 'Transaction details could not be explained' }
-        );
+      const orbData = await getOrbTransactionData(signature);
+      if (orbData) {
+        type = orbData.type;
+        summary = orbData.summary;
       }
     } catch (error) {
-      console.error('Error using Helius AI Explainer:', error);
-      return NextResponse.json(
-        { error: 'Failed to explain transaction' },
-        { status: 500 }
-      );
+      console.error('Error fetching Orb transaction data:', error);
     }
+
+    // Use Helius AI Transaction Explainer for AI explanation
+    let aiExplanation = null;
+    try {
+      aiExplanation = await getHeliusAIExplanation(transaction, 'mainnet-beta');
+    } catch (error) {
+      console.error('Error using Helius AI Explainer:', error);
+    }
+
+    // Return combined data
+    return NextResponse.json({
+      type: type === "Unknown" ? "Generic" : type,
+      summary: type === "Unknown" || type === "Transaction" ? "See advanced details for more information" : summary.replace(/\.$/, ''),
+      aiExplanation: aiExplanation?.summary ? aiExplanation.summary.replace(/\.$/, '') : null
+    });
   } catch (error) {
     console.error('Error fetching transaction details:', error);
     
@@ -52,6 +63,51 @@ export async function GET(request: NextRequest) {
       { error: 'Failed to fetch transaction details' },
       { status: 500 }
     );
+  }
+}
+
+// Function to get transaction data from Orb API
+async function getOrbTransactionData(
+  signature: string,
+  cluster: string = 'mainnet-beta'
+): Promise<{ type: string, summary: string } | null> {
+  try {
+    // Try using the Helius Transaction API instead of Orb
+    const heliusApiKey = process.env.HELIUS_API_KEY;
+    if (!heliusApiKey) {
+      console.warn('HELIUS_API_KEY not found in environment variables');
+      return null;
+    }
+
+    const response = await fetch(`https://api.helius.xyz/v0/transactions/?api-key=${heliusApiKey}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        transactions: [signature]
+      }),
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      
+      if (data && data.length > 0 && data[0]) {
+        const txData = data[0];
+        // Extract meaningful information from the transaction data
+        const type = txData.type || txData.description?.split(' ')[0] || 'Transaction';
+        const summary = txData.description || 'Transaction details';
+        
+        return {
+          type,
+          summary
+        };
+      }
+    }
+    return null;
+  } catch (error) {
+    console.error('Error calling Helius Transaction API:', error);
+    return null;
   }
 }
 
@@ -104,14 +160,10 @@ async function getHeliusAIExplanation(
         .replace(/^#.*\n/, '') // Remove the title
         .replace(/<address>(.*?)<\/address>/g, '$1') // Remove address tags
         .replace(/[•*]/g, '') // Remove bullet points and asterisks
+        .replace(/\.$/, '') // Remove trailing period
         .trim();
       
-      // Limit summary length if needed
-      if (summary.length > 500) {
-        summary = summary.substring(0, 497) + '...';
-      }
-      
-      console.log('Helius AI Explanation:', { type, summary });
+      //console.log('Helius AI Explanation:', { type, summary });
       return { type, summary };
     }
     

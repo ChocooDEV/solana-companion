@@ -3,14 +3,19 @@
 import { FC, useEffect, useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { ConfirmedSignatureInfo } from '@solana/web3.js';
-import Image from 'next/image';
+
+interface TransactionDetail {
+  type: string;
+  summary: string;
+  aiExplanation: string | null;
+}
 
 export const TransactionHistory: FC = () => {
   const { publicKey, connected } = useWallet();
   const [transactions, setTransactions] = useState<ConfirmedSignatureInfo[]>([]);
+  const [transactionDetails, setTransactionDetails] = useState<Record<string, TransactionDetail>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [transactionDetails, setTransactionDetails] = useState<Record<string, { type: string, summary: string }>>({});
 
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -31,32 +36,6 @@ export const TransactionHistory: FC = () => {
         
         const data = await response.json();
         setTransactions(data.transactions);
-        
-        // Fetch transaction details to determine types and summaries
-        const txDetails: Record<string, { type: string, summary: string }> = {};
-        for (const tx of data.transactions) {
-          try {
-            // Add a delay between requests to avoid rate limiting
-            await new Promise(resolve => setTimeout(resolve, 500));
-            
-            // Pass the wallet address to the transaction-details API
-            const detailsResponse = await fetch(`/api/transaction-details?signature=${tx.signature}&wallet=${publicKey.toString()}`);
-            if (detailsResponse.ok) {
-              const details = await detailsResponse.json();
-              txDetails[tx.signature] = {
-                type: details.type || 'Unknown',
-                summary: details.summary || 'Transaction details unavailable'
-              };
-            }
-          } catch (err) {
-            console.error('Error fetching transaction details:', err);
-            txDetails[tx.signature] = {
-              type: 'Unknown',
-              summary: 'Failed to load details'
-            };
-          }
-        }
-        setTransactionDetails(txDetails);
       } catch (err) {
         console.error('Error fetching transactions:', err);
         setError('Failed to load transactions. Please try again later.');
@@ -68,12 +47,41 @@ export const TransactionHistory: FC = () => {
     fetchTransactions();
   }, [publicKey, connected]);
 
+  // Fetch transaction details for each transaction
+  useEffect(() => {
+    const fetchTransactionDetails = async () => {
+      if (transactions.length === 0) return;
+
+      const details: Record<string, TransactionDetail> = {};
+      
+      for (const tx of transactions) {
+        try {
+          const response = await fetch(`/api/transaction-details?signature=${tx.signature}`);
+          if (response.ok) {
+            const data = await response.json();
+            details[tx.signature] = {
+              type: data.type || 'Unknown',
+              summary: data.summary || 'No summary available',
+              aiExplanation: data.aiExplanation
+            };
+          }
+        } catch (error) {
+          console.error(`Error fetching details for transaction ${tx.signature}:`, error);
+        }
+      }
+      
+      setTransactionDetails(details);
+    };
+
+    fetchTransactionDetails();
+  }, [transactions]);
+
   if (!connected) {
     return null;
   }
 
   return (
-    <div className="w-full max-w-3xl mt-8">
+    <div className="w-full max-w-7xl mt-8">
       <h2 className="text-xl font-bold mb-4">Transaction History</h2>
       
       {loading && (
@@ -95,8 +103,8 @@ export const TransactionHistory: FC = () => {
       )}
       
       {!loading && !error && transactions.length > 0 && (
-        <div className="border border-black/[.08] dark:border-white/[.145] rounded-lg overflow-hidden">
-          <table className="w-full">
+        <div className="border border-black/[.08] dark:border-white/[.145] rounded-lg overflow-x-auto">
+          <table className="w-full min-w-[800px]">
             <thead className="bg-black/[.05] dark:bg-white/[.06]">
               <tr>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Signature</th>
@@ -104,6 +112,7 @@ export const TransactionHistory: FC = () => {
                 <th className="px-4 py-3 text-left text-sm font-semibold">Summary</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Block Time</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Status</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold w-1/4">Advanced Details</th>
               </tr>
             </thead>
             <tbody>
@@ -119,20 +128,39 @@ export const TransactionHistory: FC = () => {
                       {tx.signature.slice(0, 8)}...{tx.signature.slice(-8)}
                     </a>
                   </td>
-                  <td className="px-4 py-3 text-sm">
-                    {transactionDetails[tx.signature]?.type || 'Loading...'}
+                  <td className="px-4 py-3 text-sm whitespace-nowrap">
+                    {transactionDetails[tx.signature]?.type 
+                      ? transactionDetails[tx.signature].type.charAt(0).toUpperCase() + 
+                        transactionDetails[tx.signature].type.slice(1).toLowerCase()
+                      : 'Loading...'}
                   </td>
-                  <td className="px-4 py-3 text-sm">
+                  <td className="px-4 py-3 text-sm max-w-[200px] break-words">
                     {transactionDetails[tx.signature]?.summary || 'Loading...'}
                   </td>
-                  <td className="px-4 py-3 text-sm">
+                  <td className="px-4 py-3 text-sm whitespace-nowrap">
                     {tx.blockTime ? new Date(tx.blockTime * 1000).toLocaleString() : 'N/A'}
                   </td>
-                  <td className="px-4 py-3 text-sm">
+                  <td className="px-4 py-3 text-sm whitespace-nowrap">
                     {tx.err ? (
                       <span className="text-red-600 dark:text-red-400">Failed</span>
                     ) : (
                       <span className="text-green-600 dark:text-green-400">Success</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    {transactionDetails[tx.signature]?.aiExplanation ? (
+                      <div className="max-h-[150px] overflow-y-auto pr-2">
+                        {transactionDetails[tx.signature]?.aiExplanation}
+                      </div>
+                    ) : (
+                      <a 
+                        href={`https://orb.helius.dev/tx/${tx.signature}?cluster=mainnet-beta`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 dark:text-blue-400 hover:underline"
+                      >
+                        View in Orb
+                      </a>
                     )}
                   </td>
                 </tr>
