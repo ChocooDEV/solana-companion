@@ -19,13 +19,24 @@ export async function GET(request: NextRequest) {
     // Connect to Solana using Helius RPC endpoint from .env
     const connection = new Connection(process.env.RPC_API_URL || 'https://api.devnet.solana.com', 'confirmed');
     
-    // Fetch the transaction signatures
+    // Fetch the transaction signatures with time filter
     const signatures = await connection.getSignaturesForAddress(
       publicKey,
-      { limit: 20 } // Limit to 20 most recent transactions
+      { 
+        limit: 100 // Set a reasonable limit
+      }
     );
     
-    return NextResponse.json({ transactions: signatures });
+    // Filter the results by timestamp after fetching
+    const oneDayAgo = new Date();
+    oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+    const filteredSignatures = signatures.filter(sig => {
+      if (!sig.blockTime) return false;
+      const txTime = new Date(sig.blockTime * 1000); // Convert blockTime to milliseconds
+      return txTime >= oneDayAgo;
+    });
+    
+    return NextResponse.json({ transactions: filteredSignatures });
   } catch (error) {
     console.error('Error fetching transactions:', error);
     
