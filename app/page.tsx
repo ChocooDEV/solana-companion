@@ -27,9 +27,10 @@ export default function Home() {
         </div>
       </header>
       
-      <h2 className="mt-10 text-5xl font-extrabold mb-6 text-[#222] text-center">Meet your Solana Companion</h2>
-
-      <main className="flex-grow flex flex-col items-center justify-center text-center">
+      {/* Hero section - now full screen */}
+      <section className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] text-center">
+        <h2 className="text-5xl font-extrabold mb-2 md:mt-[-250px] text-[#222]">Meet your Solana Companion</h2>
+        
         <Image
           src="/companion.png"
           alt="Solana Companion"
@@ -38,23 +39,37 @@ export default function Home() {
           className="mb-8"
         />
 
-        <p className="text-xl text-[#444]">
+        <p className="text-xl text-[#444] max-w-2xl">
           Your digital Companion grows as you interact with the Solana blockchain. Earn XP, evolve, and customize it along your journey!
         </p>
         
-        <button className="bg-[#ff6f61] hover:bg-[#ff4f41] text-white font-medium text-lg py-3 px-8 rounded-full mb-10 transition duration-300 ease-in-out transform hover:scale-105">
+        <button className="mt-8 bg-[#ff6f61] hover:bg-[#ff4f41] text-white font-medium text-lg py-3 px-8 rounded-full transition duration-300 ease-in-out transform hover:scale-105">
           Start Your Journey
         </button>
         
-        <div className="flex justify-center">
-          <div className="grid grid-cols-2 grid-rows-2 gap-6 text-lg text-[#444]">
-            <div className="text-left">🌟 Dynamic Companion Mood</div>
-            <div className="text-left">🎮 Level Up and Evolve</div>
-            <div className="text-left">🎨 Customize Your Companion</div>
-            <div className="text-left">🚀 On-chain Actions Earn Rewards</div>
+        <div className="flex justify-center mt-20">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-3xl">
+            <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 flex items-center hover:translate-y-[-5px] hover:bg-white/90">
+              <div className="bg-[#ff6f61] rounded-full p-2 mr-4 transition-transform duration-300 group-hover:scale-110">🌟</div>
+              <span className="font-medium text-[#222]">Dynamic Companion Mood</span>
+            </div>
+            <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 flex items-center hover:translate-y-[-5px] hover:bg-white/90">
+              <div className="bg-[#6c5ce7] rounded-full p-2 mr-4 transition-transform duration-300 group-hover:scale-110">🎮</div>
+              <span className="font-medium text-[#222]">Level Up and Evolve</span>
+            </div>
+            <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 flex items-center hover:translate-y-[-5px] hover:bg-white/90">
+              <div className="bg-[#00b894] rounded-full p-2 mr-4 transition-transform duration-300 group-hover:scale-110">🎨</div>
+              <span className="font-medium text-[#222]">Customize Your Companion</span>
+            </div>
+            <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 flex items-center hover:translate-y-[-5px] hover:bg-white/90">
+              <div className="bg-[#fdcb6e] rounded-full p-2 mr-4 transition-transform duration-300 group-hover:scale-110">🚀</div>
+              <span className="font-medium text-[#222]">On-chain Actions Earn Rewards</span>
+            </div>
           </div>
         </div>
-        
+      </section>
+
+      <main className="flex-grow flex flex-col items-center justify-center text-center">
         {/* New productivity features section */}
         <section className="w-full max-w-6xl mx-auto mt-20 mb-10" id="features">
           <h2 className="text-4xl font-bold mb-12 text-[#222] text-center">Track Your Blockchain Journey</h2>
