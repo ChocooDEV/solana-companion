@@ -56,7 +56,7 @@ export default function Home() {
         </div>
         
         {/* New productivity features section */}
-        <section className="w-full mt-20 mb-10">
+        <section className="w-full mt-20 mb-10" id="features">
           <h2 className="text-4xl font-bold mb-12 text-[#222] text-center">Track Your Blockchain Journey</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
