@@ -2,20 +2,37 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const router = useRouter();
+
+  const handleStartJourney = () => {
+    router.push("/transactions");
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#A0EACF] to-[#E0B0E5] p-8 sm:p-20">      
-      <header className="flex justify-between items-center py-2">
-        <div className="text-2xl font-bold text-[#222]">Solana Companion</div>
+      <header className="flex justify-between items-center">
+        <div className="flex items-center">
+          <Image 
+            src="/logo.png" 
+            alt="Solana Companion Logo" 
+            width={200} 
+            height={200}
+            className="w-32 h-auto sm:w-48 md:w-52 lg:w-56 mr-2"
+          />
+        </div>
         <nav className={`z-10 flex flex-col items-center justify-center space-y-8 transition-all duration-300 ease-in-out ${isMenuOpen ? 'fixed inset-0 bg-white bg-opacity-90' : 'hidden'} md:flex md:static md:bg-transparent md:space-y-0 md:flex-row md:justify-end`}>
           <Link href="#features" className="text-lg text-[#444] hover:text-[#222] md:mx-4" onClick={() => setIsMenuOpen(false)}>Features</Link>
           <Link href="#technology" className="text-lg text-[#444] hover:text-[#222] md:mx-4" onClick={() => setIsMenuOpen(false)}>Technology</Link>
           <Link href="#companions" className="text-lg text-[#444] hover:text-[#222] md:mx-4" onClick={() => setIsMenuOpen(false)}>Companions</Link>
-          <button className="bg-[#ff6f61] hover:bg-[#ff4f41] text-white font-medium text-lg py-2 px-4 rounded-full transition duration-300 ease-in-out transform hover:scale-105 md:mx-4" onClick={() => setIsMenuOpen(false)}>
-            Try for Free
+          <button className="bg-[#ff6f61] hover:bg-[#ff4f41] text-white font-medium text-lg py-2 px-4 rounded-full transition duration-300 ease-in-out transform hover:scale-105 md:mx-4" onClick={() => {
+            setIsMenuOpen(false);
+            handleStartJourney();
+          }}>
+            Start Your Journey
           </button>
         </nav>
         <div className="md:hidden">
@@ -43,7 +60,7 @@ export default function Home() {
           Your digital Companion grows as you interact with the Solana blockchain. Earn XP, evolve, and customize it along your journey!
         </p>
         
-        <button className="mt-8 bg-[#ff6f61] hover:bg-[#ff4f41] text-white font-medium text-lg py-3 px-8 rounded-full transition duration-300 ease-in-out transform hover:scale-105">
+        <button className="mt-8 bg-[#ff6f61] hover:bg-[#ff4f41] text-white font-medium text-lg py-3 px-8 rounded-full transition duration-300 ease-in-out transform hover:scale-105" onClick={handleStartJourney}>
           Start Your Journey
         </button>
         
@@ -349,7 +366,7 @@ export default function Home() {
           </div>
           
           <div className="text-center mt-10">
-            <button className="bg-[#ff6f61] hover:bg-[#ff4f41] text-white font-medium text-lg py-3 px-8 rounded-full mb-10 transition duration-300 ease-in-out transform hover:scale-105">
+            <button className="bg-[#ff6f61] hover:bg-[#ff4f41] text-white font-medium text-lg py-3 px-8 rounded-full mb-10 transition duration-300 ease-in-out transform hover:scale-105" onClick={handleStartJourney}>
               Start Your Journey
             </button>
           </div>
