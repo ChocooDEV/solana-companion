@@ -119,24 +119,24 @@ export const TransactionHistory: FC = () => {
   }
 
   return (
-    <div className="w-full max-w-7xl mt-12 space-y-8">
-      <h2 className="text-2xl font-bold mb-6">Transaction History</h2>
+    <div className="w-full max-w-7xl mt-12 space-y-8 p-8 sm:p-12 bg-gradient-to-b from-[#A0EACF] to-[#E0B0E5] rounded-2xl">
+      <h2 className="text-4xl font-bold mb-6 text-[#222]">Transaction History</h2>
       
       {(loading || (transactions.length > 0 && Object.keys(transactionDetails).length < transactions.length)) ? (
         <div className="flex flex-col items-center justify-center py-16 space-y-4">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-foreground"></div>
-          <p className="text-gray-600 dark:text-gray-300 text-lg">Reading your on-chain activities...</p>
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#444]"></div>
+          <p className="text-[#444] text-lg">Reading your on-chain activities...</p>
         </div>
       ) : (
         <>
           {error && (
-            <div className="bg-red-100 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 p-6 rounded-xl shadow-sm">
+            <div className="bg-white/90 backdrop-blur-sm border border-red-200 text-red-700 p-6 rounded-xl shadow-sm">
               {error}
             </div>
           )}
           
           {!error && transactions.length === 0 && (
-            <div className="text-center py-12 text-gray-500 dark:text-gray-400 bg-black/[.02] dark:bg-white/[.03] rounded-xl border border-black/[.08] dark:border-white/[.145]">
+            <div className="text-center py-12 text-[#444] bg-white/80 backdrop-blur-sm rounded-xl border border-black/[.08] shadow-md">
               No transactions found for this wallet.
             </div>
           )}
@@ -144,60 +144,60 @@ export const TransactionHistory: FC = () => {
           {!error && transactions.length > 0 && (
             <>
               <div className="mb-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="border border-black/[.08] dark:border-white/[.145] rounded-xl p-6 bg-black/[.02] dark:bg-white/[.03] shadow-sm hover:shadow-md transition-shadow duration-200">
-                  <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">Received</div>
-                  <div className="text-3xl font-bold text-green-600 dark:text-green-400">{stats.receive}</div>
+                <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-md hover:shadow-lg transition-all duration-300 border-l-4 border-green-500">
+                  <div className="text-sm text-[#555] mb-2">Received</div>
+                  <div className="text-3xl font-bold text-green-600">{stats.receive}</div>
                 </div>
-                <div className="border border-black/[.08] dark:border-white/[.145] rounded-xl p-6 bg-black/[.02] dark:bg-white/[.03] shadow-sm hover:shadow-md transition-shadow duration-200">
-                  <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">Sent</div>
-                  <div className="text-3xl font-bold text-red-600 dark:text-red-400">{stats.send}</div>
+                <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-md hover:shadow-lg transition-all duration-300 border-l-4 border-red-500">
+                  <div className="text-sm text-[#555] mb-2">Sent</div>
+                  <div className="text-3xl font-bold text-red-600">{stats.send}</div>
                 </div>
-                <div className="border border-black/[.08] dark:border-white/[.145] rounded-xl p-6 bg-black/[.02] dark:bg-white/[.03] shadow-sm hover:shadow-md transition-shadow duration-200">
-                  <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">Time Period</div>
-                  <div className="text-3xl font-bold">{stats.days} {stats.days === 1 ? 'day' : 'days'}</div>
+                <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-md hover:shadow-lg transition-all duration-300 border-l-4 border-[#6c5ce7]">
+                  <div className="text-sm text-[#555] mb-2">Time Period</div>
+                  <div className="text-3xl font-bold text-[#333]">{stats.days} {stats.days === 1 ? 'day' : 'days'}</div>
                 </div>
               </div>
-              <div className="border border-black/[.08] dark:border-white/[.145] rounded-xl overflow-hidden shadow-sm mt-12">
+              <div className="bg-white/90 backdrop-blur-sm rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 mt-12">
                 <table className="w-full min-w-[800px]">
-                  <thead className="bg-black/[.05] dark:bg-white/[.06]">
+                  <thead className="bg-black/[.05]">
                     <tr>
-                      <th className="px-6 py-4 text-left text-sm font-semibold">Signature</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold">Action</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold">Summary</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold">Date</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold w-1/4">Advanced Details</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-[#333]">Signature</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-[#333]">Action</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-[#333]">Summary</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-[#333]">Date</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-[#333] w-1/4">Advanced Details</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-black/[.08] dark:divide-white/[.145]">
+                  <tbody className="divide-y divide-black/[.08]">
                     {transactions.map((tx) => (
-                      <tr key={tx.signature} className="hover:bg-black/[.02] dark:hover:bg-white/[.02] transition-colors duration-150">
+                      <tr key={tx.signature} className="hover:bg-black/[.02] transition-colors duration-150">
                         <td className="px-6 py-4 text-sm font-mono">
                           <a 
                             href={`https://explorer.solana.com/tx/${tx.signature}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-blue-600 dark:text-blue-400 hover:underline"
+                            className="text-blue-600 hover:underline"
                           >
                             {tx.signature.slice(0, 8)}...{tx.signature.slice(-8)}
                           </a>
                         </td>
                         <td className="px-6 py-4 text-sm whitespace-nowrap">
                           {transactionDetails[tx.signature]?.action === 'SEND' ? (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300">SEND</span>
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">SEND</span>
                           ) : transactionDetails[tx.signature]?.action === 'RECEIVE' ? (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">RECEIVE</span>
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">RECEIVE</span>
                           ) : (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300">OTHER</span>
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">OTHER</span>
                           )}
                         </td>
-                        <td className="px-6 py-4 text-sm max-w-[200px] break-words">
+                        <td className="px-6 py-4 text-sm max-w-[200px] break-words text-[#444]">
                           {transactionDetails[tx.signature]?.summary || 'No summary available'}
                         </td>
-                        <td className="px-6 py-4 text-sm whitespace-nowrap">
+                        <td className="px-6 py-4 text-sm whitespace-nowrap text-[#444]">
                           {tx.blockTime ? new Date(tx.blockTime * 1000).toLocaleDateString() : 'N/A'}
                         </td>
                         <td className="px-6 py-4 text-sm">
-                          <div className="max-h-[150px] overflow-y-auto pr-3 text-gray-700 dark:text-gray-300">
+                          <div className="max-h-[150px] overflow-y-auto pr-3 text-[#555]">
                             {transactionDetails[tx.signature]?.aiExplanation || 'No details available'}
                           </div>
                         </td>
