@@ -61,56 +61,56 @@ export default function Home() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Feature 1 */}
-            <div className="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300 w-full border-l-4 border-[#ff6f61]">
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 w-full border-l-4 border-[#ff6f61] hover:translate-y-[-5px] group">
               <div className="flex items-start mb-4">
-                <div className="bg-[#ff6f61] rounded-full p-2 mr-4">
+                <div className="bg-[#ff6f61] rounded-full p-3 mr-4 group-hover:scale-110 transition-transform duration-300">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h3 className="text-2xl font-bold text-[#333] text-left">Connect daily to earn XP</h3>
+                <h3 className="text-2xl font-bold text-[#333] text-left">Daily Activities🔥</h3>
               </div>
               <div className="pl-12 text-left">
                 <p className="text-[#555] mb-3 leading-relaxed">
-                  Each day you connect, Solana Companion will analyze your activity and reward you with XP.
+                  Connect daily and watch your Companion grow with XP rewards
                 </p>
                 <p className="text-[#555] mb-3 leading-relaxed">
-                  When you are on a streak, your Companion will be in a good mood!
+                  Keep your streak alive and your Companion will be in a good mood
                 </p>
                 <p className="text-[#555] mb-3 leading-relaxed">
-                  However if you don't connect for a while, your Companion will get upset and you will lose your streak...
+                  Forget to check in? Uh-oh! Your Companion's mood will drop...
                 </p>
                 <p className="text-[#555] leading-relaxed">
-                  The more XP you earn, the more your Companion will evolve and you will be able to unlock new customizations!
+                  Stack that XP to unlock epic evolutions and new customizations
                 </p>
               </div>
             </div>
             
             {/* Feature 2 */} 
-            <div className="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300 w-full border-l-4 border-[#6c5ce7]">
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 w-full border-l-4 border-[#6c5ce7] hover:translate-y-[-5px] group">
               <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
                 <div className="flex-1">
                   <div className="flex items-start mb-4">
-                    <div className="bg-[#6c5ce7] rounded-full p-2 mr-4">
+                    <div className="bg-[#6c5ce7] rounded-full p-3 mr-4 group-hover:scale-110 transition-transform duration-300">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                       </svg>
                     </div>
-                    <h3 className="text-2xl font-bold text-[#333] text-left">Take your companion everywhere</h3>
+                    <h3 className="text-2xl font-bold text-[#333] text-left">Pocket-Sized Friend 📱</h3>
                   </div>
                   <div className="pl-12 text-left">
                     <p className="text-[#555] mb-3 leading-relaxed">
-                      Your Solana Companion is always with you, no matter what device you're using.
+                      Your Companion follows you everywhere
                     </p>
                     <p className="text-[#555] mb-3 leading-relaxed">
-                      Seamlessly switch between your phone, tablet, or desktop - your companion's progress syncs automatically.
+                      Simply connect your wallet no matter what device you're on to get your XP
                     </p>
                     <p className="text-[#555] leading-relaxed">
-                      The responsive design ensures your companion looks great on any screen size!
+                      Show off your Companion to your friends and make them jealous
                     </p>
                   </div>
                 </div>
-                <div className="flex-shrink-0 md:w-1/3 flex justify-center">
+                <div className="flex-shrink-0 md:w-1/3 flex justify-center group-hover:rotate-3 transition-transform duration-300">
                   <Image
                     src="/mobile_mockup.png" 
                     alt="Mobile app mockup"
@@ -128,28 +128,25 @@ export default function Home() {
             </div>
             
             {/* Feature 3 */}
-            <div className="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300 w-full border-l-4 border-[#00b894]">
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 w-full border-l-4 border-[#00b894] hover:translate-y-[-5px] group">
               <div className="flex items-start mb-4">
-                <div className="bg-[#00b894] rounded-full p-2 mr-4">
+                <div className="bg-[#00b894] rounded-full p-3 mr-4 group-hover:scale-110 transition-transform duration-300">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                   </svg>
                 </div>
-                <h3 className="text-2xl font-bold text-[#333] text-left">Customize your Companion</h3>
+                <h3 className="text-2xl font-bold text-[#333] text-left">Customize Your Companion 🎨</h3>
               </div>
               <div className="pl-12 text-left">
                 <p className="text-[#555] mb-3 leading-relaxed">
-                  Make your Companion truly yours with a wide range of customization options.
+                  Dress up your Companion with accessories and styles
                 </p>
                 <p className="text-[#555] mb-3 leading-relaxed">
-                  Unlock new accessories, colors, and styles as you level up and complete challenges.
-                </p>
-                <p className="text-[#555] mb-3 leading-relaxed">
-                  Show off your unique Companion to friends and the Solana community!
+                  Crush challenges to unlock the coolest gear in the Solanaverse
                 </p>
                 <p className="text-[#555] leading-relaxed">
-                  Some rare customizations can only be unlocked through special on-chain achievements.
+                  Hunt for ultra-rare items that only drop from special on-chain quests
                 </p>
               </div>
             </div>
