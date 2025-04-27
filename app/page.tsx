@@ -12,7 +12,7 @@ export default function Home() {
         <div className="text-2xl font-bold text-[#222]">Solana Companion</div>
         <nav className={`z-10 flex flex-col items-center justify-center space-y-8 transition-all duration-300 ease-in-out ${isMenuOpen ? 'fixed inset-0 bg-white bg-opacity-90' : 'hidden'} md:flex md:static md:bg-transparent md:space-y-0 md:flex-row md:justify-end`}>
           <Link href="#features" className="text-lg text-[#444] hover:text-[#222] md:mx-4" onClick={() => setIsMenuOpen(false)}>Features</Link>
-          <Link href="#about" className="text-lg text-[#444] hover:text-[#222] md:mx-4" onClick={() => setIsMenuOpen(false)}>About Us</Link>
+          <Link href="#technology" className="text-lg text-[#444] hover:text-[#222] md:mx-4" onClick={() => setIsMenuOpen(false)}>Technology</Link>
           <Link href="#companions" className="text-lg text-[#444] hover:text-[#222] md:mx-4" onClick={() => setIsMenuOpen(false)}>Companions</Link>
           <button className="bg-[#ff6f61] hover:bg-[#ff4f41] text-white font-medium text-lg py-2 px-4 rounded-full transition duration-300 ease-in-out transform hover:scale-105 md:mx-4" onClick={() => setIsMenuOpen(false)}>
             Try for Free
@@ -158,6 +158,76 @@ export default function Home() {
                 <p className="text-[#555] leading-relaxed">
                   Hunt for ultra-rare items that only drop from special on-chain quests
                 </p>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        {/* Tech Stack section */}
+        <section className="w-full max-w-6xl mx-auto mt-20 mb-10" id="technology">
+          <h2 className="text-4xl font-bold mb-12 text-[#222] text-center">Our Tech Stack</h2>
+          
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300">
+            <div className="flex flex-col md:flex-row items-center gap-8">
+              <div className="md:w-1/2">
+                <Image
+                  src="/tech.png"
+                  alt="Technology Stack"
+                  width={500}
+                  height={350}
+                  className="rounded-xl shadow-md hover:shadow-lg transition-all duration-300"
+                />
+              </div>
+              
+              <div className="md:w-1/2 text-left">
+                <h3 className="text-2xl font-bold text-[#333] mb-4 animate-fadeIn">Powered by Solana's Ecosystem</h3>
+                <p className="text-[#555] mb-4 leading-relaxed animate-fadeIn animation-delay-200">
+                  We leverage the best of Solana's ecosystem to create a seamless and engaging experience for your Companion journey
+                </p>
+                
+                <div className="space-y-6 mt-6">
+                  <div className="flex items-start animate-slideRight animation-delay-300 hover:translate-x-2 transition-transform duration-300">
+                    <div className="bg-[#ff6f61] rounded-full p-2 mr-3 mt-1 animate-pulse animation-delay-500">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-[#333]">Irys for Permanent Storage</h4>
+                      <p className="text-[#555] leading-relaxed">
+                        Your Companion's data is securely stored on <a href="https://irys.xyz/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Irys</a>, ensuring permanent and decentralized storage of all your achievements and customizations
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start animate-slideRight animation-delay-500 hover:translate-x-2 transition-transform duration-300">
+                    <div className="bg-[#6c5ce7] rounded-full p-2 mr-3 mt-1 animate-pulse animation-delay-700">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-[#333]">Helius for Transaction History</h4>
+                      <p className="text-[#555] leading-relaxed">
+                        We use <a href="https://www.helius.dev/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Helius</a> to read your wallet transaction history, allowing your Companion to react to your on-chain activities and reward you accordingly
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start animate-slideRight animation-delay-700 hover:translate-x-2 transition-transform duration-300">
+                    <div className="bg-[#fdcb6e] rounded-full p-2 mr-3 mt-1 animate-pulse animation-delay-900">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-[#333]">Metaplex for NFTs</h4>
+                      <p className="text-[#555] leading-relaxed">
+                        We use <a href="https://www.metaplex.com/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Metaplex</a> to create and manage your Companion's NFTs
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
