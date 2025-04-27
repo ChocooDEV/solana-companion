@@ -117,11 +117,6 @@ export default function Home() {
                     width={180}
                     height={360}
                     className="shadow-lg rounded-lg object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.onerror = null;
-                      target.src = "https://placehold.co/180x360/6c5ce7/white?text=App+Preview";
-                    }}
                   />
                 </div>
               </div>
@@ -150,6 +145,128 @@ export default function Home() {
                 </p>
               </div>
             </div>
+          </div>
+        </section>
+        
+        {/* New Companions/Monsters section */}
+        <section className="w-full mt-20 mb-10" id="companions">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-[#222]">Mint your own Companion, evolve it, and customize it</h2>
+          </div>
+          
+          <div className="grid grid-cols-5 gap-4 max-w-6xl mx-auto">
+            {/* First companion (unlocked/featured) */}
+            <div className="col-span-2 row-span-2 bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center">
+              <Image
+                src="/companions/companion1.png"
+                alt="Fluffy companion with heart"
+                width={180}
+                height={180}
+                className="transform hover:scale-105 transition-transform duration-300"
+              />
+            </div>
+            
+            {/* Unlocked companions */}
+            <div className="bg-white/90 backdrop-blur-sm rounded-xl p-3 shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center">
+              <Image
+                src="/companions/companion1.png"
+                alt="Brown furry companion"
+                width={70}
+                height={70}
+                className="transform hover:scale-110 transition-transform duration-300"
+              />
+            </div>
+            
+            <div className="bg-white/90 backdrop-blur-sm rounded-xl p-3 shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center">
+              <Image
+                src="/companions/companion1.png"
+                alt="Blue furry companion"
+                width={70}
+                height={70}
+                className="transform hover:scale-110 transition-transform duration-300"
+              />
+            </div>
+            
+            <div className="bg-white/90 backdrop-blur-sm rounded-xl p-3 shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center">
+              <Image
+                src="/companions/companion1.png"
+                alt="Brown companion with big eyes"
+                width={70}
+                height={70}
+                className="transform hover:scale-110 transition-transform duration-300"
+              />
+            </div>
+            
+            {/* Locked companions */}
+            <div className="bg-white/90 backdrop-blur-sm rounded-xl p-3 shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center relative group">
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-200/50 backdrop-blur-sm rounded-xl">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <div className="opacity-30 blur-sm">
+                <Image
+                  src="/companions/companion1.png"
+                  alt="Locked companion"
+                  width={70}
+                  height={70}
+                />
+              </div>
+            </div>
+            
+            <div className="bg-white/90 backdrop-blur-sm rounded-xl p-3 shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center relative group">
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-200/50 backdrop-blur-sm rounded-xl">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <div className="opacity-30 blur-sm">
+                <Image  
+                  src="/companions/companion1.png"
+                  alt="Locked companion"
+                  width={70}
+                  height={70}
+                />
+              </div>
+            </div>
+            
+            <div className="bg-white/90 backdrop-blur-sm rounded-xl p-3 shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center relative group">
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-200/50 backdrop-blur-sm rounded-xl">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <div className="opacity-30 blur-sm">
+                <Image
+                  src="/companions/companion1.png"
+                  alt="Locked companion"
+                  width={70}
+                  height={70}
+                />
+              </div>
+            </div>
+            
+            <div className="bg-white/90 backdrop-blur-sm rounded-xl p-3 shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center relative group">
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-200/50 backdrop-blur-sm rounded-xl">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <div className="opacity-30 blur-sm">
+                <Image
+                  src="/companions/companion1.png"
+                  alt="Locked companion"
+                  width={70}
+                  height={70}
+                />
+              </div>
+            </div>
+          </div>
+          
+          <div className="text-center mt-10">
+            <button className="bg-[#ff6f61] hover:bg-[#ff4f41] text-white font-medium text-lg py-3 px-8 rounded-full mb-10 transition duration-300 ease-in-out transform hover:scale-105">
+              Start Your Journey
+            </button>
           </div>
         </section>
       </main>
