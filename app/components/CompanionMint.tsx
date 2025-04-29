@@ -79,15 +79,11 @@ export const CompanionMint: FC = () => {
       
       // Import the getSolanaConnection function
       const { getSolanaConnection } = await import('../utils/solanaConnection');
-      console.log('Getting Solana connection...');
       const connection = await getSolanaConnection('confirmed');
-      console.log('Connection type:', typeof connection);
-      console.log('Connection methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(connection)));
       
       // Check if connection is valid before using it
       if (connection && typeof connection.getBalance === 'function') {
         const balance = await connection.getBalance(new PublicKey(publicKey));
-        console.log('Client balance:', balance / 1e9);
         const requiredAmount = Number(fundingResult.estimatedCost) + 0.01; // Add extra for transaction fees
         
         if (balance / 1e9 < requiredAmount) {
@@ -200,11 +196,14 @@ export const CompanionMint: FC = () => {
       // Import the mintCompanionNFT function
       const { mintCompanionNFT } = await import('../utils/mintUtils');
 
+      console.log('Minting NFT...');
+      const fixedMetadataUri = uploadResult.metadataUri.replace('https://arweave.net/', 'https://devnet.irys.xyz/'); 
+  
       // Mint the NFT directly from the client
       const mintResult = await mintCompanionNFT(
         connection,
         publicKey,
-        uploadResult.metadataUri,
+        fixedMetadataUri, //uploadResult.metadataUri,
         signTransaction,
         async (message: Uint8Array) => {
           if (!wallet.signMessage) {
@@ -255,8 +254,18 @@ export const CompanionMint: FC = () => {
       
       const saveResult = await saveResponse.json();
       
+      // Generate Solana Explorer links
+      const isDevnet = true; //process.env.NEXT_PUBLIC_SOLANA_NETWORK === 'devnet';
+      const explorerBaseUrl = isDevnet 
+        ? 'https://explorer.solana.com/?cluster=devnet' 
+        : 'https://explorer.solana.com';
+      
+      const tokenUrl = `${explorerBaseUrl}/address/${mintResult.mint}`;
+
+      console.log('Solana Explorer Token URL:', tokenUrl);
+      
       if (saveResult.success) {
-        setSuccess(`Your companion ${name} has been minted successfully!`);
+        setSuccess(`Your companion ${name} has been minted successfully! <a href="${tokenUrl}" target="_blank" class="text-blue-600 underline">View on Solana Explorer</a>`);
       } else {
         setError('Companion was minted but there was an issue finalizing. Please try refreshing.');
       }
@@ -331,7 +340,7 @@ export const CompanionMint: FC = () => {
       
       {success && (
         <div className="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
-          {success}
+          <div dangerouslySetInnerHTML={{ __html: success }} />
         </div>
       )}
       

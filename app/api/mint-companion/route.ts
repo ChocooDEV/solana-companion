@@ -26,8 +26,6 @@ export async function GET(request: NextRequest) {
     
     // Use server wallet from .env instead of generating a new one
     const umi = createUmi(rpcUrl);
-
-    console.log('private key:', process.env.PRIVATE_KEY);
     
     // Create a keypair from the private key in .env
     const privateKeyString = process.env.PRIVATE_KEY || '';
@@ -166,7 +164,10 @@ export async function POST(request: NextRequest) {
     }
     
     // Add Irys uploader to UMI
-    umi.use(irysUploader());
+    umi.use(irysUploader({
+      address: "https://devnet.irys.xyz",
+      payer: serverSigner,
+    }));
     
     // Upload metadata to Irys (server-side with funded wallet)
     const metadata = {
