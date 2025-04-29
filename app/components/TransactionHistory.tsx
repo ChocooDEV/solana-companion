@@ -3,6 +3,10 @@
 import { FC, useEffect, useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { ConfirmedSignatureInfo } from '@solana/web3.js';
+import { CompanionMint } from './CompanionMint';
+import { checkCompanionOwnership } from '../services/companionService';
+import { Connection } from '@solana/web3.js';
+import { CompanionDisplay } from './CompanionDisplay';
 
 interface TransactionDetail {
   type: string;
@@ -18,6 +22,32 @@ export const TransactionHistory: FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState({ receive: 0, send: 0, days: 0 });
+  const [hasCompanion, setHasCompanion] = useState<boolean | null>(null);
+  const [checkingCompanion, setCheckingCompanion] = useState(false);
+
+  // Check if the wallet owns a companion
+  useEffect(() => {
+    const checkOwnership = async () => {
+      if (!connected || !publicKey) {
+        setHasCompanion(null);
+        return;
+      }
+
+      setCheckingCompanion(true);
+      try {
+        const connection = new Connection(process.env.RPC_API_URL || 'https://api.devnet.solana.com');
+        const ownsCompanion = await checkCompanionOwnership(publicKey.toString(), connection);
+        setHasCompanion(ownsCompanion);
+      } catch (err) {
+        console.error('Error checking companion ownership:', err);
+        setHasCompanion(false); // Assume no companion on error to allow minting
+      } finally {
+        setCheckingCompanion(false);
+      }
+    };
+
+    checkOwnership();
+  }, [publicKey, connected]);
 
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -118,9 +148,26 @@ export const TransactionHistory: FC = () => {
     return null;
   }
 
+  // Show companion minting if the wallet doesn't have a companion
+  if (connected && hasCompanion === false && !checkingCompanion) {
+    return <CompanionMint />;
+  }
+
+  // Show loading state while checking companion ownership
+  if (checkingCompanion) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 space-y-4">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#444]"></div>
+        <p className="text-[#444] text-lg">Checking for Solana Companion...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full max-w-7xl mt-12 space-y-8 p-8 sm:p-12 bg-gradient-to-b from-[#A0EACF] to-[#E0B0E5] rounded-2xl">
       <h2 className="text-4xl font-bold mb-6 text-[#222]">Transaction History</h2>
+      
+      {hasCompanion && <CompanionDisplay />}
       
       {(loading || (transactions.length > 0 && Object.keys(transactionDetails).length < transactions.length)) ? (
         <div className="flex flex-col items-center justify-center py-16 space-y-4">
