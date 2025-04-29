@@ -91,26 +91,41 @@ export const CompanionDisplay: FC = () => {
         <div className="md:w-2/3 md:pl-6">
           <h3 className="text-2xl font-bold text-[#333] mb-2">{companion.name}</h3>
           
+          <p className="text-sm text-[#666] mb-4">{companion.description}</p>
+          
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
               <p className="text-sm text-[#666]">Age</p>
               <p className="text-lg font-medium text-[#333]">{ageInDays} days</p>
             </div>
             
-            <div>
-              <p className="text-sm text-[#666]">Level</p>
-              <p className="text-lg font-medium text-[#333]">{companion.level}</p>
-            </div>
+            {['level', 'experience', 'evolution', 'mood'].map(attr => {
+              const value = companion[attr as keyof Companion];
+              const displayValue = 
+                attr === 'evolution' ? `Stage ${value}` : 
+                attr === 'experience' ? `${value} XP` : 
+                typeof value === 'string' || typeof value === 'number' ? value : 
+                String(value);
+                
+              return (
+                <div key={attr}>
+                  <p className="text-sm text-[#666]">{attr.charAt(0).toUpperCase() + attr.slice(1)}</p>
+                  <p className="text-lg font-medium text-[#333]">{displayValue}</p>
+                </div>
+              );
+            })}
             
-            <div>
-              <p className="text-sm text-[#666]">Experience</p>
-              <p className="text-lg font-medium text-[#333]">{companion.experience} XP</p>
-            </div>
-            
-            <div>
-              <p className="text-sm text-[#666]">Evolution</p>
-              <p className="text-lg font-medium text-[#333]">{companion.evolution}</p>
-            </div>
+            {companion.attributes
+              .filter(attr => 
+                !['Level', 'Experience', 'Evolution', 'Mood', 'DateOfBirth'].includes(attr.trait_type)
+              )
+              .map(attr => (
+                <div key={attr.trait_type}>
+                  <p className="text-sm text-[#666]">{attr.trait_type}</p>
+                  <p className="text-lg font-medium text-[#333]">{attr.value || "None"}</p>
+                </div>
+              ))
+            }
           </div>
           
           <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4">

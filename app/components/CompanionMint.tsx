@@ -198,7 +198,7 @@ export const CompanionMint: FC = () => {
 
       console.log('Minting NFT...');
       const fixedMetadataUri = uploadResult.metadataUri.replace('https://arweave.net/', 'https://devnet.irys.xyz/'); 
-  
+      console.log('--- >DEVNET corrected metadata URI:', fixedMetadataUri);
       // Mint the NFT directly from the client
       const mintResult = await mintCompanionNFT(
         connection,

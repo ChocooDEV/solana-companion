@@ -114,27 +114,43 @@ export async function mintCompanionNFT(
       throw new Error('Collection address not found in environment variables');
     }
 
+    // Fetch backend wallet address to use as update authority and freeze authority
+    const backendWalletResponse = await fetch('/api/env?key=BACKEND_WALLET_ADDRESS');
+    if (!backendWalletResponse.ok) {
+      throw new Error('Failed to fetch backend wallet address from API');
+    }
+    
+    const { value: backendWalletAddress } = await backendWalletResponse.json();
+    if (!backendWalletAddress) {
+      throw new Error('Backend wallet address not found in environment variables');
+    }
+    
+    const backendPublicKey = publicKey(backendWalletAddress);
+
     const collection = await fetchCollection(
       umi,
       publicKey(collectionAddress)
     );
     console.log("Minting to collection: ", collection);
 
+    // temporary change metadata uri from arweave.net to devnet.irys.xyz
+    const fixedMetadataUri = metadataUri.replace('https://arweave.net/', 'https://devnet.irys.xyz/');
+
     const { signature } = await createCoreAsset(umi, {
       asset: asset,
       collection: collection,
-      authority: umi.identity,
-      payer: createNoopSigner(ownerPublicKey),
-      owner: ownerPublicKey,
+      authority: backendPublicKey, // Set backend wallet as update authority
+      payer: umi.identity, // Client pays for the transaction
+      owner: ownerPublicKey, // NFT is owned by the client wallet
       name: '',
-      uri: metadataUri,
+      uri: fixedMetadataUri,
       plugins: [
         {
           type: 'FreezeDelegate',
           frozen: false,
           authority: {
             type: 'Address',
-            address: ownerPublicKey,
+            address: backendPublicKey, // Set backend wallet as freeze authority
           },
         },
       ],
