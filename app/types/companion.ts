@@ -1,13 +1,17 @@
 export interface Companion {
   name: string;
-  dateOfBirth: string;
+  description?: string;
   image: string;
-  description: string;
-  experience: number;
+  dateOfBirth: string;
   level: number;
+  experience: number;
   evolution: number;
   mood: string;
-  attributes: CompanionAttribute[];
+  lastUpdated?: string;
+  attributes: Array<{
+    trait_type: string;
+    value: string | number;
+  }>;
 }
 
 export interface CompanionAttribute {

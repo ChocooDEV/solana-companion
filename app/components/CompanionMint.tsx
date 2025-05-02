@@ -10,20 +10,20 @@ const companionChoices: CompanionChoice[] = [
   {
     id: 1,
     name: "Fluffy",
-    image: "/companions/companion1.png",
-    description: "A friendly and energetic companion that loves to play."
+    image: "https://i.imgur.com/9rmNc1F.png",
+    description: "A plush-like companion covered in soft, abundant fur. Radiates coziness and turns every moment into a warm, comforting adventure"
   },
   {
-    id: 2,
+    id: 2,  
     name: "Sparky",
-    image: "/companions/companion2.png",
-    description: "A brave and adventurous companion with a fiery personality."
+    image: "/companions/sparky_0.png",
+    description: "An electrifying companion that crackles with energy. Brightens any space with vibrant personality and makes every adventure more exciting"
   },
   {
     id: 3,
-    name: "Misty",
-    image: "/companions/companion3.png",
-    description: "A calm and wise companion that brings peace wherever it goes."
+    name: "Ember",
+    image: "/companions/ember_0.png",
+    description: "A blazing companion with a fiery spirit. Radiates warmth and energy, turning everyday moments into unforgettable adventures"
   }
 ];
 
@@ -65,111 +65,46 @@ export const CompanionMint: FC = () => {
         ]
       };
 
-      // Step 1: Get funding transaction
-      setCurrentStep('Preparing funding transaction...');
-      const fundingResponse = await fetch(`/api/mint-companion?walletAddress=${publicKey.toString()}`);
-      const fundingResult = await fundingResponse.json();
+      // Get funding transaction
+      setCurrentStep('Getting funding transaction...');
+      const initResponse = await fetch(`/api/mint-companion?walletAddress=${publicKey.toString()}`);
       
-      if (!fundingResult.success) {
-        throw new Error(fundingResult.error || 'Failed to prepare funding transaction');
+      if (!initResponse.ok) {
+        const errorText = await initResponse.text();
+        throw new Error(`Failed to get funding transaction: ${errorText}`);
       }
       
-      // Check balance before proceeding
-      setCurrentStep('Checking wallet balance...');
+      const initResult = await initResponse.json();
       
-      // Import the getSolanaConnection function
-      const { getSolanaConnection } = await import('../utils/solanaConnection');
-      const connection = await getSolanaConnection('confirmed');
-      
-      // Check if connection is valid before using it
-      if (connection && typeof connection.getBalance === 'function') {
-        const balance = await connection.getBalance(new PublicKey(publicKey));
-        const requiredAmount = Number(fundingResult.estimatedCost) + 0.01; // Add extra for transaction fees
-        
-        if (balance / 1e9 < requiredAmount) {
-          throw new Error(`Insufficient balance. You need at least ${requiredAmount} SOL but have ${balance / 1e9} SOL.`);
-        }
-      } else {
-        console.error('Invalid connection object:', connection);
-        throw new Error('Failed to get a valid Solana connection');
+      if (!initResult.success) {
+        throw new Error(initResult.error || 'Failed to get funding transaction');
       }
       
       // Sign the funding transaction
       setCurrentStep('Signing funding transaction...');
-      
-      // Deserialize the transaction
-      const fundingTxBuffer = Buffer.from(fundingResult.fundingTransaction, 'base64');
+      const fundingTxBuffer = Buffer.from(initResult.fundingTransaction, 'base64');
       const fundingTx = Transaction.from(fundingTxBuffer);
-      
       const signedFundingTx = await signTransaction(fundingTx);
       
       // Submit the funding transaction
       setCurrentStep('Submitting funding transaction...');
-      let fundingSignature;
-      try {
-        fundingSignature = await connection.sendRawTransaction(
-          signedFundingTx.serialize(),
-          { skipPreflight: false, preflightCommitment: 'confirmed' }
-        );
-        
-        // Wait for confirmation
-        const latestBlockhash = await connection.getLatestBlockhash();
-        await connection.confirmTransaction({
-          signature: fundingSignature,
-          blockhash: latestBlockhash.blockhash,
-          lastValidBlockHeight: latestBlockhash.lastValidBlockHeight
-        });
-      } catch (err) {
-        console.error('Transaction error:', err);
-        if (err instanceof Error && err.message.includes('insufficient funds for rent')) {
-          throw new Error('Transaction failed: Not enough SOL to cover rent for new account creation. Please add more SOL to your wallet.');
-        } else {
-          throw err;
-        }
-      }
-
-      if (!fundingSignature) {
-        throw new Error('Failed to submit funding transaction');
-      }
-
-      // Add a delay to ensure funds are available on the server
-      setCurrentStep('Waiting for funds to be available on the server...');
+      const { getSolanaConnection } = await import('../utils/solanaConnection');
+      const connection = await getSolanaConnection('confirmed');
       
-      // Poll the server to check if funds are available
-      let fundingConfirmed = false;
-      let retryCount = 0;
-      const maxRetries = 10;
+      const fundingSignature = await connection.sendRawTransaction(
+        signedFundingTx.serialize(),
+        { skipPreflight: false, preflightCommitment: 'confirmed' }
+      );
       
-      while (!fundingConfirmed && retryCount < maxRetries) {
-        const checkFundingResponse = await fetch('/api/check-funding-status', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            serverSecretKey: fundingResult.serverSecretKey,
-            fundingSignature: fundingSignature
-          }),
-        });
-        
-        const checkResult = await checkFundingResponse.json();
-        
-        if (checkResult.success && checkResult.funded) {
-          fundingConfirmed = true;
-          console.log('Server wallet funding confirmed');
-        } else {
-          retryCount++;
-          console.log(`Waiting for funding confirmation... (${retryCount}/${maxRetries})`);
-          // Wait 2 seconds before checking again
-          await new Promise(resolve => setTimeout(resolve, 2000));
-        }
-      }
+      // Wait for confirmation
+      const latestBlockhash = await connection.getLatestBlockhash();
+      await connection.confirmTransaction({
+        signature: fundingSignature,
+        blockhash: latestBlockhash.blockhash,
+        lastValidBlockHeight: latestBlockhash.lastValidBlockHeight
+      });
       
-      if (!fundingConfirmed) {
-        throw new Error('Timed out waiting for server wallet funding confirmation');
-      }
-
-      // Step 2: Upload metadata to Irys using server wallet
+      // Upload metadata
       setCurrentStep('Uploading metadata...');
       const uploadResponse = await fetch('/api/mint-companion', {
         method: 'POST',
@@ -179,10 +114,14 @@ export const CompanionMint: FC = () => {
         body: JSON.stringify({
           walletAddress: publicKey.toString(),
           companionData: companion,
-          serverSecretKey: fundingResult.serverSecretKey,
           fundingSignature: fundingSignature
         }),
       });
+      
+      if (!uploadResponse.ok) {
+        const errorText = await uploadResponse.text();
+        throw new Error(`Failed to upload metadata: ${errorText}`);
+      }
       
       const uploadResult = await uploadResponse.json();
       
@@ -190,34 +129,48 @@ export const CompanionMint: FC = () => {
         throw new Error(uploadResult.error || 'Failed to upload metadata');
       }
       
-      // Skip the metadata confirmation step and proceed directly to minting
+      // Get minting instructions
+      setCurrentStep('Preparing to mint NFT...');
+      const mintInstructionsResponse = await fetch('/api/mint-companion', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          walletAddress: publicKey.toString(),
+          metadataUri: uploadResult.metadataUri,
+          name: companion.name
+        }),
+      });
+      
+      if (!mintInstructionsResponse.ok) {
+        const errorText = await mintInstructionsResponse.text();
+        throw new Error(`Failed to get minting instructions: ${errorText}`);
+      }
+      
+      const mintInstructions = await mintInstructionsResponse.json();
+      
+      if (!mintInstructions.success) {
+        throw new Error(mintInstructions.error || 'Failed to get minting instructions');
+      }
+      
+      // Mint the NFT client-side
       setCurrentStep('Minting your companion NFT...');
-
-      // Import the mintCompanionNFT function
       const { mintCompanionNFT } = await import('../utils/mintUtils');
-
-      console.log('Minting NFT...');
-      const fixedMetadataUri = uploadResult.metadataUri.replace('https://arweave.net/', 'https://devnet.irys.xyz/'); 
-      console.log('--- >DEVNET corrected metadata URI:', fixedMetadataUri);
-      // Mint the NFT directly from the client
+      
       const mintResult = await mintCompanionNFT(
         connection,
         publicKey,
-        fixedMetadataUri, //uploadResult.metadataUri,
+        mintInstructions.metadataUri,
         signTransaction,
-        async (message: Uint8Array) => {
-          if (!wallet.signMessage) {
-            throw new Error('Wallet does not support message signing');
-          }
-          return wallet.signMessage(message);
-        }
+        wallet.signMessage || ((message: Uint8Array) => Promise.reject("Wallet doesn't support message signing"))
       );
       
       if (!mintResult.success) {
         throw new Error(mintResult.message || 'Failed to mint NFT');
       }
       
-      // Step 4: Verify the transaction
+      // Verify the transaction
       setCurrentStep('Verifying transaction...');
       const verifyResponse = await fetch('/api/mint-companion', {
         method: 'PUT',
@@ -230,45 +183,27 @@ export const CompanionMint: FC = () => {
         }),
       });
       
-      const verifyResult = await verifyResponse.json();
-      
-      if (!verifyResult.success) {
-        throw new Error(verifyResult.error || 'Failed to verify transaction');
+      if (!verifyResponse.ok) {
+        const errorText = await verifyResponse.text();
+        console.warn(`Verification warning: ${errorText}`);
+        // Continue even if verification has issues
       }
       
-      // Save the companion data
-      setCurrentStep('Finalizing...');
-      const saveResponse = await fetch('/api/save-companion', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          walletAddress: publicKey.toString(),
-          companion,
-          mintAddress: mintResult.mint,
-          metadataUri: uploadResult.metadataUri,
-          signature: mintResult.signature
-        }),
-      });
-      
-      const saveResult = await saveResponse.json();
-      
       // Generate Solana Explorer links
-      const isDevnet = true; //process.env.NEXT_PUBLIC_SOLANA_NETWORK === 'devnet';
+      const isDevnet = true;
       const explorerBaseUrl = isDevnet 
         ? 'https://explorer.solana.com/?cluster=devnet' 
         : 'https://explorer.solana.com';
       
       const tokenUrl = `${explorerBaseUrl}/address/${mintResult.mint}`;
-
-      console.log('Solana Explorer Token URL:', tokenUrl);
       
-      if (saveResult.success) {
-        setSuccess(`Your companion ${name} has been minted successfully! <a href="${tokenUrl}" target="_blank" class="text-blue-600 underline">View on Solana Explorer</a>`);
-      } else {
-        setError('Companion was minted but there was an issue finalizing. Please try refreshing.');
-      }
+      setSuccess(`Your companion ${name} has been minted successfully! <a href="${tokenUrl}" target="_blank" class="text-blue-600 underline">View on Solana Explorer</a>`);
+      
+      // Add a delay before reloading the page
+      setTimeout(() => {
+        window.location.reload();
+      }, 5000); // Reload after 5 seconds
+      
     } catch (err) {
       setError(`Failed to mint companion: ${err instanceof Error ? err.message : String(err)}`);
       console.error(err);

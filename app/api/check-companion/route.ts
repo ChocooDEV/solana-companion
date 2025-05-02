@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
 import { publicKey } from '@metaplex-foundation/umi';
 import { fetchAssetsByOwner } from '@metaplex-foundation/mpl-core';
+import { getRpcUrl } from '@/app/utils/solanaConnection';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -15,8 +16,9 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Create UMI instance
-    const umi = createUmi('https://api.devnet.solana.com');
+    // Create UMI instance using the utility function
+    const rpcUrl = await getRpcUrl();
+    const umi = createUmi(rpcUrl);
     const collectionAddress = process.env.COLLECTION_ADDRESS || '6GfRWbTgpMJB51hXzp5CuDVGwVTFhAFCJvxqQEswe2bY';
     
     // Fetch all assets owned by the wallet

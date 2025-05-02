@@ -2,17 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
 import { publicKey } from '@metaplex-foundation/umi';
 import { fetchAssetsByOwner } from '@metaplex-foundation/mpl-core';
+import { getRpcUrl } from '@/app/utils/solanaConnection';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const walletAddress = searchParams.get('walletAddress') || searchParams.get('wallet');
-  
+
   if (!walletAddress) {
     return NextResponse.json({ error: 'Wallet address is required' }, { status: 400 });
   }
 
   try {
-    const umi = createUmi('https://api.devnet.solana.com'); ///*process.env.RPC_API_URL || */
+    const rpcUrl = await getRpcUrl();
+    const umi = createUmi(rpcUrl);
     const collectionAddress = process.env.COLLECTION_ADDRESS || '6GfRWbTgpMJB51hXzp5CuDVGwVTFhAFCJvxqQEswe2bY';
 
     // Fetch all assets owned by the wallet
@@ -59,7 +61,7 @@ export async function GET(request: NextRequest) {
           companion = {
             name: firstCompanion.name || "Error please contact the team",
             description: "Error please contact the team",
-            image: "/companions/companion1.png",
+            image: "/companions/fluffy_0.png",
             dateOfBirth: new Date().toISOString(),
             level: 0,
             experience: 0,
@@ -83,15 +85,15 @@ export async function GET(request: NextRequest) {
             companion = {
               name: metadata.name || "Error while fetching companion",
               description: metadata.description || "No description available",
-              // Fix the image path if it's a relative path
               image: metadata.image?.startsWith('http') ? metadata.image : 
-                     metadata.image?.startsWith('/') ? metadata.image : 
-                     `/companions/companion1.png`,
+                    metadata.image?.startsWith('/') ? metadata.image : 
+                    `/companions/fluffy_0.png`,
               dateOfBirth: metadata.attributes?.find((attr: any) => attr.trait_type === "DateOfBirth")?.value || new Date().toISOString(),
               level: parseInt(metadata.attributes?.find((attr: any) => attr.trait_type === "Level")?.value) || 0,
               experience: parseInt(metadata.attributes?.find((attr: any) => attr.trait_type === "Experience")?.value) || 0,
               evolution: parseInt(metadata.attributes?.find((attr: any) => attr.trait_type === "Evolution")?.value) || 0,
               mood: metadata.attributes?.find((attr: any) => attr.trait_type === "Mood")?.value || "Neutral",
+              lastUpdated: metadata.attributes?.find((attr: any) => attr.trait_type === "LastUpdated")?.value || new Date().toISOString(), // Add this line
               attributes: metadata.attributes || [],
             };
           } catch (jsonError) {

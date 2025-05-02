@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Connection, Transaction } from '@solana/web3.js';
+import { Transaction } from '@solana/web3.js';
+import { getSolanaConnection } from '@/app/utils/solanaConnection';
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,8 +10,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Signed transaction is required' }, { status: 400 });
     }
     
-    // Create connection to Solana
-    const connection = new Connection(/*process.env.RPC_API_URL || */'https://api.devnet.solana.com', 'confirmed');
+    // Create connection to Solana using the utility function
+    const connection = await getSolanaConnection('confirmed');
     
     // Deserialize the transaction
     const transaction = Transaction.from(Buffer.from(signedTransaction, 'base64'));

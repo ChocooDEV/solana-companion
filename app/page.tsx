@@ -1,12 +1,27 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const router = useRouter();
+
+  const companionImages = [
+    "/companions/fluffy_0.png",
+    "/companions/fluffy_1.png",
+    "/companions/fluffy_2.png"
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % companionImages.length);
+    }, 3000); // Change image every 3 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   const handleStartJourney = () => {
     router.push("/transactions");
@@ -48,13 +63,20 @@ export default function Home() {
       <section className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] text-center">
         <h2 className="text-5xl font-extrabold mb-2 md:mt-[-250px] text-[#222]">Meet your Solana Companion</h2>
         
-        <Image
-          src="/companion.png"
-          alt="Solana Companion"
-          width={600}
-          height={600}
-          className="mb-8"
-        />
+        <div className="relative w-[600px] h-[600px] mb-8">
+          {companionImages.map((src, index) => (
+            <Image
+              key={src}
+              src={src}
+              alt={`Solana Companion ${index + 1}`}
+              width={600}
+              height={600}
+              className={`absolute top-0 left-0 transition-opacity duration-1000 ${
+                index === currentImageIndex ? "opacity-100" : "opacity-0"
+              }`}
+            />
+          ))}
+        </div>
 
         <p className="text-xl text-[#444] max-w-2xl">
           Your digital Companion grows as you interact with the Solana blockchain. Earn XP, evolve, and customize it along your journey!
@@ -260,7 +282,7 @@ export default function Home() {
             {/* First companion (unlocked/featured) */}
             <div className="col-span-2 row-span-2 bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center">
               <Image
-                src="/companions/companion1.png"
+                src="/companions/fluffy_0.png"
                 alt="Fluffy companion with heart"
                 width={180}
                 height={180}
@@ -271,7 +293,7 @@ export default function Home() {
             {/* Unlocked companions */}
             <div className="bg-white/90 backdrop-blur-sm rounded-xl p-3 shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center">
               <Image
-                src="/companions/companion1.png"
+                src="/companions/fluffy_0.png"
                 alt="Brown furry companion"
                 width={70}
                 height={70}
@@ -281,7 +303,7 @@ export default function Home() {
             
             <div className="bg-white/90 backdrop-blur-sm rounded-xl p-3 shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center">
               <Image
-                src="/companions/companion1.png"
+                src="/companions/fluffy_0.png"
                 alt="Blue furry companion"
                 width={70}
                 height={70}
@@ -291,7 +313,7 @@ export default function Home() {
             
             <div className="bg-white/90 backdrop-blur-sm rounded-xl p-3 shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center">
               <Image
-                src="/companions/companion1.png"
+                src="/companions/fluffy_0.png"
                 alt="Brown companion with big eyes"
                 width={70}
                 height={70}
@@ -308,7 +330,7 @@ export default function Home() {
               </div>
               <div className="opacity-30 blur-sm">
                 <Image
-                  src="/companions/companion1.png"
+                  src="/companions/fluffy_0.png"
                   alt="Locked companion"
                   width={70}
                   height={70}
@@ -324,7 +346,7 @@ export default function Home() {
               </div>
               <div className="opacity-30 blur-sm">
                 <Image  
-                  src="/companions/companion1.png"
+                  src="/companions/fluffy_0.png"
                   alt="Locked companion"
                   width={70}
                   height={70}
@@ -340,7 +362,7 @@ export default function Home() {
               </div>
               <div className="opacity-30 blur-sm">
                 <Image
-                  src="/companions/companion1.png"
+                  src="/companions/fluffy_0.png"
                   alt="Locked companion"
                   width={70}
                   height={70}
@@ -356,7 +378,7 @@ export default function Home() {
               </div>
               <div className="opacity-30 blur-sm">
                 <Image
-                  src="/companions/companion1.png"
+                  src="/companions/fluffy_0.png"
                   alt="Locked companion"
                   width={70}
                   height={70}

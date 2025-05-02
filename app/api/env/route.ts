@@ -5,7 +5,7 @@ export async function GET(request: NextRequest) {
   const key = searchParams.get('key');
   
   // Only allow specific environment variables to be accessed
-  const allowedKeys = ['COLLECTION_ADDRESS', 'RPC_API_URL'];
+  const allowedKeys = ['COLLECTION_ADDRESS', 'RPC_API_URL', 'BACKEND_WALLET_ADDRESS'];
   
   if (!key || !allowedKeys.includes(key)) {
     return NextResponse.json(

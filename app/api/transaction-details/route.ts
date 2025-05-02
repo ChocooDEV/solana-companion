@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Connection, ParsedTransactionWithMeta } from '@solana/web3.js';
+import { getSolanaConnection } from '@/app/utils/solanaConnection';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // Connect to Solana using Helius RPC endpoint from .env
-    const connection = new Connection(process.env.RPC_API_URL || 'https://api.devnet.solana.com', 'confirmed');
+    const connection = new Connection(process.env.RPC_API_URL || 'https://api.devnet.solana.com', 'confirmed'); //TODO CHANGE
     
     // Fetch the transaction details
     const transaction = await connection.getParsedTransaction(signature, {

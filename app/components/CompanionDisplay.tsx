@@ -4,7 +4,7 @@ import { FC, useEffect, useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import Image from 'next/image';
 import { Companion } from '../types/companion';
-import { CompanionUpdate } from './CompanionUpdate';
+import { CompanionProgress } from './CompanionProgress';
 
 export const CompanionDisplay: FC = () => {
   const { publicKey } = useWallet();
@@ -75,6 +75,38 @@ export const CompanionDisplay: FC = () => {
   const today = new Date();
   const ageInDays = Math.floor((today.getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24));
 
+  // Format the lastUpdated date
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "Never";
+    const date = new Date(dateString);
+    
+    // Format date as "2nd May 2025" with ordinal suffix
+    const day = date.getDate();
+    const ordinalSuffix = getOrdinalSuffix(day);
+    const month = date.toLocaleString('en-US', { month: 'long' });
+    const year = date.getFullYear();
+    
+    // Format time as "8:07pm" (12-hour format with am/pm)
+    const timeString = date.toLocaleString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit', 
+      hour12: true 
+    });
+    
+    return `${day}${ordinalSuffix} ${month} ${year}, ${timeString}`;
+  };
+  
+  // Helper function to get ordinal suffix (1st, 2nd, 3rd, etc.)
+  const getOrdinalSuffix = (day: number): string => {
+    if (day > 3 && day < 21) return 'th';
+    switch (day % 10) {
+      case 1: return 'st';
+      case 2: return 'nd';
+      case 3: return 'rd';
+      default: return 'th';
+    }
+  };
+
   return (
     <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-md hover:shadow-lg transition-all duration-300 mb-8">
       <div className="flex flex-col md:flex-row items-center">
@@ -115,9 +147,14 @@ export const CompanionDisplay: FC = () => {
               );
             })}
             
+            <div>
+              <p className="text-sm text-[#666]">Last sync</p>
+              <p className="text-lg font-medium text-[#333]">{formatDate(companion.lastUpdated)}</p>
+            </div>
+            
             {companion.attributes
               .filter(attr => 
-                !['Level', 'Experience', 'Evolution', 'Mood', 'DateOfBirth'].includes(attr.trait_type)
+                !['Level', 'Experience', 'Evolution', 'Mood', 'DateOfBirth', 'LastUpdated'].includes(attr.trait_type)
               )
               .map(attr => (
                 <div key={attr.trait_type}>
@@ -138,18 +175,11 @@ export const CompanionDisplay: FC = () => {
           <p className="text-sm text-[#666] mb-4">
             {100 - companion.experience} XP until next level
           </p>
-          
-          <button
-            onClick={() => setShowUpdateForm(!showUpdateForm)}
-            className="bg-[#ff6f61] hover:bg-[#ff4f41] text-white font-medium py-2 px-4 rounded-lg transition duration-300 ease-in-out"
-          >
-            {showUpdateForm ? 'Hide Update Form' : 'Update Companion'}
-          </button>
         </div>
       </div>
       
-      {showUpdateForm && mintAddress && (
-        <CompanionUpdate 
+      {mintAddress && (
+        <CompanionProgress 
           companion={companion} 
           mintAddress={mintAddress}
           onUpdate={handleCompanionUpdate}

@@ -35,9 +35,14 @@ export const TransactionHistory: FC = () => {
 
       setCheckingCompanion(true);
       try {
-        const connection = new Connection(process.env.RPC_API_URL || 'https://api.devnet.solana.com');
-        const ownsCompanion = await checkCompanionOwnership(publicKey.toString(), connection);
-        setHasCompanion(ownsCompanion);
+        const response = await fetch(`/api/check-companion?wallet=${publicKey.toString()}`);
+        
+        if (!response.ok) {
+          throw new Error('Failed to check companion ownership');
+        }
+        
+        const data = await response.json();
+        setHasCompanion(data.hasCompanion);
       } catch (err) {
         console.error('Error checking companion ownership:', err);
         setHasCompanion(false); // Assume no companion on error to allow minting
@@ -49,33 +54,35 @@ export const TransactionHistory: FC = () => {
     checkOwnership();
   }, [publicKey, connected]);
 
+  // Create a function to fetch transactions that can be called on demand
+  const fetchTransactions = async () => {
+    if (!connected || !publicKey) {
+      setTransactions([]);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/transactions?wallet=${publicKey.toString()}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch transactions');
+      }
+      
+      const data = await response.json();
+      setTransactions(data.transactions);
+    } catch (err) {
+      console.error('Error fetching transactions:', err);
+      setError('Failed to load transactions. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Use the fetchTransactions function in the useEffect
   useEffect(() => {
-    const fetchTransactions = async () => {
-      if (!connected || !publicKey) {
-        setTransactions([]);
-        return;
-      }
-
-      setLoading(true);
-      setError(null);
-
-      try {
-        const response = await fetch(`/api/transactions?wallet=${publicKey.toString()}`);
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch transactions');
-        }
-        
-        const data = await response.json();
-        setTransactions(data.transactions);
-      } catch (err) {
-        console.error('Error fetching transactions:', err);
-        setError('Failed to load transactions. Please try again later.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchTransactions();
   }, [publicKey, connected]);
 
@@ -122,25 +129,11 @@ export const TransactionHistory: FC = () => {
       if (detail.action === 'SEND') sendCount++;
     });
     
-    // Calculate date range in days
-    let oldestDate: number | null = null;
-    let newestDate: number | null = null;
-    
-    transactions.forEach(tx => {
-      if (tx.blockTime) {
-        if (oldestDate === null || tx.blockTime < oldestDate) oldestDate = tx.blockTime;
-        if (newestDate === null || tx.blockTime > newestDate) newestDate = tx.blockTime;
-      }
-    });
-    
-    const daysDiff = oldestDate && newestDate 
-      ? Math.ceil((newestDate - oldestDate) / (60 * 60 * 24)) 
-      : 0;
-    
+    // Since the API already filters for the last day, we can simplify this
     setStats({
       receive: receiveCount,
       send: sendCount,
-      days: daysDiff
+      days: 1 // The API is already filtering for 1 day
     });
   }, [transactions, transactionDetails]);
 
@@ -164,9 +157,7 @@ export const TransactionHistory: FC = () => {
   }
 
   return (
-    <div className="w-full max-w-7xl mt-12 space-y-8 p-8 sm:p-12 bg-gradient-to-b from-[#A0EACF] to-[#E0B0E5] rounded-2xl">
-      <h2 className="text-4xl font-bold mb-6 text-[#222]">Transaction History</h2>
-      
+    <div className="w-full max-w-7xl mt-12 space-y-8 p-8 sm:p-12 bg-gradient-to-b from-[#A0EACF] to-[#E0B0E5] rounded-2xl">      
       {hasCompanion && <CompanionDisplay />}
       
       {(loading || (transactions.length > 0 && Object.keys(transactionDetails).length < transactions.length)) ? (
@@ -184,7 +175,13 @@ export const TransactionHistory: FC = () => {
           
           {!error && transactions.length === 0 && (
             <div className="text-center py-12 text-[#444] bg-white/80 backdrop-blur-sm rounded-xl border border-black/[.08] shadow-md">
-              No transactions found for this wallet.
+              <p className="mb-4">No transactions found for this wallet.</p>
+              <button 
+                onClick={fetchTransactions}
+                className="px-4 py-2 bg-[#6c5ce7] text-white rounded-lg hover:bg-[#5b4bc4] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#6c5ce7]"
+              >
+                Refresh Transactions
+              </button>
             </div>
           )}
           
@@ -201,7 +198,7 @@ export const TransactionHistory: FC = () => {
                 </div>
                 <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-md hover:shadow-lg transition-all duration-300 border-l-4 border-[#6c5ce7]">
                   <div className="text-sm text-[#555] mb-2">Time Period</div>
-                  <div className="text-3xl font-bold text-[#333]">{stats.days} {stats.days === 1 ? 'day' : 'days'}</div>
+                  <div className="text-3xl font-bold text-[#333]">Last 24 hours</div>
                 </div>
               </div>
               <div className="bg-white/90 backdrop-blur-sm rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 mt-12">

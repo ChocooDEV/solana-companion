@@ -133,17 +133,14 @@ export async function mintCompanionNFT(
     );
     console.log("Minting to collection: ", collection);
 
-    // temporary change metadata uri from arweave.net to devnet.irys.xyz
-    const fixedMetadataUri = metadataUri.replace('https://arweave.net/', 'https://devnet.irys.xyz/');
-
     const { signature } = await createCoreAsset(umi, {
       asset: asset,
       collection: collection,
       authority: backendPublicKey, // Set backend wallet as update authority
       payer: umi.identity, // Client pays for the transaction
       owner: ownerPublicKey, // NFT is owned by the client wallet
-      name: '',
-      uri: fixedMetadataUri,
+      name: 'Solana Companion',
+      uri: metadataUri,
       plugins: [
         {
           type: 'FreezeDelegate',

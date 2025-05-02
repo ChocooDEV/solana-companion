@@ -1,58 +1,59 @@
 import { Connection, Commitment } from '@solana/web3.js';
 
-// Cache for the RPC URL
-let cachedRpcUrl: string | null = null;
+// Cache the connection to avoid creating a new one for each request
+let connectionCache: { [key: string]: Connection } = {};
 
-export async function getRpcUrl(): Promise<string> {
-  if (cachedRpcUrl) return cachedRpcUrl;
-  
+export async function getRpcUrl() {
   try {
-    // Check if we're in a browser or server environment
-    const isServer = typeof window === 'undefined';
-    const baseUrl = isServer 
-      ? process.env.VERCEL_URL 
-        ? 'http://localhost:3000'//`https://${process.env.VERCEL_URL}` 
-        : 'http://localhost:3000'
-      : '';
-      
+    // Use absolute URL with the base URL from environment
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const response = await fetch(`${baseUrl}/api/env?key=RPC_API_URL`);
+    
     if (!response.ok) {
-      throw new Error('Failed to fetch RPC URL');
+      throw new Error('Failed to fetch RPC URL from API');
     }
     
     const data = await response.json();
-    cachedRpcUrl = /*data.value || */ 'https://api.devnet.solana.com';
-    return cachedRpcUrl as string;
+    return data.value;
   } catch (error) {
-    console.error('Error fetching RPC URL:', error);
-    return 'https://api.devnet.solana.com'; // Fallback
+    console.error('Error getting RPC URL:', error);
+    
+    // Fallback to environment variable directly
+    const fallbackUrl = process.env.RPC_API_URL || 'https://api.devnet.solana.com';
+    console.log('Using fallback RPC URL:', fallbackUrl);
+    return fallbackUrl;
   }
 }
 
-// Connection cache
-const connectionCache: Record<string, Connection> = {};
-
 export async function getSolanaConnection(commitment: Commitment = 'confirmed'): Promise<Connection> {
-  const cacheKey = commitment;
-  
-  if (connectionCache[cacheKey]) {
-    console.log('Returning cached connection');
-    return connectionCache[cacheKey];
-  }
-  
-  const rpcUrl = await getRpcUrl();
-  console.log('Creating new connection with RPC URL:', rpcUrl);
-  const connection = new Connection(rpcUrl, commitment);
-  
-  // Verify the connection is valid
-  console.log('Connection created, testing with getVersion()');
   try {
-    await connection.getVersion();
-    console.log('Connection verified');
-  } catch (e) {
-    console.error('Connection test failed:', e);
+    const cacheKey = `connection-${commitment}`;
+    
+    // Return cached connection if available
+    if (connectionCache[cacheKey]) {
+      return connectionCache[cacheKey];
+    }
+    
+    // Get RPC URL
+    const rpcUrl = await getRpcUrl();
+    
+    // Ensure URL starts with http:// or https://
+    if (!rpcUrl.startsWith('http://') && !rpcUrl.startsWith('https://')) {
+      throw new Error('Endpoint URL must start with `http:` or `https:`.');
+    }
+    
+    // Create new connection
+    const connection = new Connection(rpcUrl, commitment);
+    
+    // Cache the connection
+    connectionCache[cacheKey] = connection;
+    
+    return connection;
+  } catch (error) {
+    console.error('Error creating Solana connection:', error);
+    // Fallback to devnet if there's an error
+    const fallbackUrl = 'https://api.devnet.solana.com';
+    const connection = new Connection(fallbackUrl, commitment);
+    return connection;
   }
-  
-  connectionCache[cacheKey] = connection;
-  return connection;
 }

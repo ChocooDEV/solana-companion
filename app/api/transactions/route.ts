@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Connection, PublicKey } from '@solana/web3.js';
+import { PublicKey, Connection } from '@solana/web3.js';
+import { getSolanaConnection } from '@/app/utils/solanaConnection';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
     const publicKey = new PublicKey(walletAddress);
     
     // Connect to Solana using Helius RPC endpoint from .env
-    const connection = new Connection(process.env.RPC_API_URL || 'https://api.devnet.solana.com', 'confirmed');
+    const connection = new Connection(process.env.RPC_API_URL || 'https://api.devnet.solana.com', 'confirmed'); //TODO CHANGE
     
     // Fetch the transaction signatures with time filter
     const signatures = await connection.getSignaturesForAddress(

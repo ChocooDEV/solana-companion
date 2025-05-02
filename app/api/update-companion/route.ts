@@ -1,29 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
-import { fetchCollection } from '@metaplex-foundation/mpl-core';
-import { generateSigner, publicKey } from '@metaplex-foundation/umi';
-import { irysUploader } from '@metaplex-foundation/umi-uploader-irys';
-import { create } from '@metaplex-foundation/mpl-core';
-import { signerIdentity } from '@metaplex-foundation/umi';
-import Irys from '@irys/sdk';
-import { Keypair, Connection, Transaction, SystemProgram, PublicKey } from '@solana/web3.js';
-import { mintCompanionNFT } from '@/app/utils/mintUtils';
+import { 
+  fetchAsset, 
+  update,
+  fetchCollection
+} from '@metaplex-foundation/mpl-core';
+import { 
+  publicKey,
+  transactionBuilder,
+  signerIdentity,
+  createSignerFromKeypair
+} from '@metaplex-foundation/umi';
 import { getRpcUrl } from '@/app/utils/solanaConnection';
+import { Connection, Transaction, PublicKey, SystemProgram } from '@solana/web3.js';
 import bs58 from 'bs58';
+import { irysUploader } from '@metaplex-foundation/umi-uploader-irys';
+import Irys from '@irys/sdk';
 
-// Step 1: Get funding transaction
+// GET endpoint to prepare funding transaction
 export async function GET(request: NextRequest) {
   try {
-    const { walletAddress } = Object.fromEntries(request.nextUrl.searchParams);
+    const searchParams = new URL(request.url).searchParams;
+    const walletAddress = searchParams.get('walletAddress');
     
     if (!walletAddress) {
       return NextResponse.json({ error: 'Wallet address is required' }, { status: 400 });
     }
     
-    // Use the utility function to get RPC URL
+    // Get RPC URL
     const rpcUrl = await getRpcUrl();
-    
-    // Use server wallet from .env instead of generating a new one
+    console.log('RPC URL:', rpcUrl);
+    // Create UMI instance
     const umi = createUmi(rpcUrl);
     
     // Create a keypair from the private key in .env
@@ -31,20 +38,16 @@ export async function GET(request: NextRequest) {
     const secretKey = bs58.decode(privateKeyString);
     const serverWallet = umi.eddsa.createKeypairFromSecretKey(secretKey);
     
-    // Create a Solana keypair for Irys
-    const keypair = serverWallet;
-    
     // Calculate Irys funding amount
     const irys = new Irys({
       url: "https://devnet.irys.xyz",
       token: "solana",
-      key: keypair.secretKey,
+      key: serverWallet.secretKey,
       config: { providerUrl: rpcUrl }
     });
     
     const estimatedSize = 5000; // 5KB for metadata
     const price = await irys.getPrice(estimatedSize);
-    const priceInSol = irys.utils.fromAtomic(price);
     
     // Add extra SOL for rent exemption (0.01 SOL should be enough for most cases)
     const atomicAmount = BigInt(price.toString()) + BigInt(10000000); // Add 0.01 SOL
@@ -53,7 +56,7 @@ export async function GET(request: NextRequest) {
     const connection = new Connection(rpcUrl, 'confirmed');
     const transaction = new Transaction();
     
-    // Add a system transfer instruction
+    // Add instruction to transfer SOL from client to server wallet
     transaction.add(
       SystemProgram.transfer({
         fromPubkey: new PublicKey(walletAddress),
@@ -62,7 +65,7 @@ export async function GET(request: NextRequest) {
       })
     );
     
-    // Get a recent blockhash
+    // Get recent blockhash
     const { blockhash } = await connection.getLatestBlockhash();
     transaction.recentBlockhash = blockhash;
     transaction.feePayer = new PublicKey(walletAddress);
@@ -71,93 +74,62 @@ export async function GET(request: NextRequest) {
     const serializedTransaction = transaction.serialize({
       requireAllSignatures: false,
       verifySignatures: false
-    }).toString('base64');
+    });
+    
+    const base64Transaction = serializedTransaction.toString('base64');
     
     return NextResponse.json({
       success: true,
-      serverWallet: serverWallet.publicKey.toString(),
-      serverSecretKey: Array.from(serverWallet.secretKey),
-      fundingTransaction: serializedTransaction,
-      estimatedCost: priceInSol
+      fundingTransaction: base64Transaction,
+      estimatedCost: atomicAmount.toString(),
+      serverSecretKey: bs58.encode(serverWallet.secretKey)
     });
   } catch (error) {
-    console.error('Error creating funding transaction:', error);
-    return NextResponse.json({ error: 'Failed to create funding transaction' }, { status: 500 });
+    console.error('Error preparing funding transaction:', error);
+    return NextResponse.json({ 
+      success: false, 
+      error: error instanceof Error ? error.message : String(error) 
+    }, { status: 500 });
   }
 }
 
-// Step 2: Upload metadata after funding
+// POST endpoint to handle metadata upload and transaction preparation
 export async function POST(request: NextRequest) {
   try {
-    const { walletAddress, companionData, fundingSignature } = await request.json();
+    const { assetAddress, companionData, payerPublicKey, serverSecretKey, fundingSignature } = await request.json();
     
-    if (!walletAddress || !companionData || !fundingSignature) {
+    console.log('Received update request:', { assetAddress, companionData, payerPublicKey });
+    if (!assetAddress || !companionData || !payerPublicKey || !serverSecretKey || !fundingSignature) {
       return NextResponse.json({ 
-        error: 'Wallet address, companion data, and funding signature are required' 
+        error: 'assetAddress, companionData, payerPublicKey, serverSecretKey, and fundingSignature are required' 
       }, { status: 400 });
     }
     
-    // Use the utility function to get RPC URL
+    // 1. Setup UMI with backend wallet as update authority
     const rpcUrl = await getRpcUrl();
-    
-    // Use server wallet from .env
     const umi = createUmi(rpcUrl);
-    
-    // Create a keypair from the private key in .env
-    const privateKeyString = process.env.PRIVATE_KEY || '';
-    const secretKey = bs58.decode(privateKeyString);
+
+    // Recreate server wallet from the provided secret key
+    const secretKey = bs58.decode(serverSecretKey);
     const serverWallet = umi.eddsa.createKeypairFromSecretKey(secretKey);
-    
-    // Create a proper UMI signer from the keypair
-    const serverSigner = {
-      publicKey: serverWallet.publicKey,
-      secretKey: serverWallet.secretKey,
-      signMessage: async (message: Uint8Array) => {
-        return umi.eddsa.sign(message, serverWallet);
-      },
-      signTransaction: async (transaction: any) => transaction,
-      signAllTransactions: async (transactions: any[]) => transactions,
-    };
-    
-    // Use the signer with UMI
+    const serverSigner = createSignerFromKeypair(umi, serverWallet);
     umi.use(signerIdentity(serverSigner));
     
-    // Log the server wallet address
-    console.log('Server wallet address:', serverWallet.publicKey);
-    
-    // Check server wallet balance
+    // Verify the funding transaction
     const connection = new Connection(rpcUrl, 'confirmed');
-    const serverBalance = await connection.getBalance(new PublicKey(serverWallet.publicKey));
-    console.log('Server wallet balance:', serverBalance / 1e9, 'SOL');
-    
-    // Verify funding transaction
-    const status = await connection.getSignatureStatus(fundingSignature);
-    console.log('Funding transaction status:', status?.value?.confirmationStatus);
-    
-    if (!status || !status.value || status.value.confirmationStatus !== 'confirmed') {
-      return NextResponse.json({ error: 'Funding transaction not confirmed' }, { status: 400 });
-    }
-    
-    // Check server wallet balance and ensure funds are available
-    const serverBalanceAfterFunding = await connection.getBalance(new PublicKey(serverWallet.publicKey));
-    console.log('Server wallet balance after funding:', serverBalanceAfterFunding / 1e9, 'SOL');
-    
-    // Ensure the wallet has sufficient funds before proceeding
-    if (serverBalanceAfterFunding <= 0) {
-      // Wait a bit and check again (retry mechanism)
-      console.log('Waiting for funds to be available...');
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
-      
-      const retryBalance = await connection.getBalance(new PublicKey(serverWallet.publicKey));
-      console.log('Server wallet balance after waiting:', retryBalance / 1e9, 'SOL');
-      
-      if (retryBalance <= 0) {
+    try {
+      const status = await connection.getSignatureStatus(fundingSignature);
+      if (!status || !status.value || status.value.err) {
         return NextResponse.json({ 
-          error: 'Funding transaction confirmed but funds not available in server wallet',
-          serverWallet: serverWallet.publicKey,
-          fundingStatus: status?.value
+          success: false, 
+          error: 'Funding transaction failed or not confirmed' 
         }, { status: 400 });
       }
+    } catch (error) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Failed to verify funding transaction' 
+      }, { status: 400 });
     }
     
     // Add Irys uploader to UMI
@@ -166,7 +138,7 @@ export async function POST(request: NextRequest) {
       payer: serverSigner,
     }));
     
-    // Upload metadata to Irys (server-side with funded wallet)
+    // 2. Upload metadata to Irys (server-side with server wallet)
     const metadata = {
       name: companionData.name,
       description: companionData.description,
@@ -181,74 +153,62 @@ export async function POST(request: NextRequest) {
         ...companionData.attributes
       ]
     };
+    
+    console.log('Uploading metadata with server wallet:', serverWallet.publicKey);
+    const metadataUri = await umi.uploader.uploadJson(metadata);
+    console.log('Metadata uploaded successfully to:', metadataUri);
+    
+    // 3. Fetch the asset
+    const asset = await fetchAsset(umi, publicKey(assetAddress));
 
-    try {
-      console.log('Attempting to upload metadata with server wallet:', serverWallet.publicKey);
-      
-      // Upload metadata to Irys
-      const metadataUri = await umi.uploader.uploadJson(metadata);
-      console.log('Metadata uploaded successfully to:', metadataUri);
-      
-      // Return the metadata URI for the client to use for minting
-      return NextResponse.json({ 
-        success: true, 
-        metadataUri: metadataUri,
-        // No minting happens here - just return the metadata URI
-      });
-      
-    } catch (uploadError) {
-      console.error('Error during upload:', uploadError);
-      
-      // Check balance again to see if it changed
-      const serverBalanceAfterError = await connection.getBalance(new PublicKey(serverWallet.publicKey));
-      console.log('Server wallet balance after error:', serverBalanceAfterError / 1e9, 'SOL');
-      
-      return NextResponse.json({ 
-        success: false,
-        error: `Failed during upload: ${uploadError instanceof Error ? uploadError.message : String(uploadError)}`,
-        walletUsed: serverWallet.publicKey,
-        walletBalance: serverBalanceAfterFunding / 1e9
-      }, { status: 500 });
-    }
-  } catch (error) {
-    console.error('Error preparing upload:', error);
-    return NextResponse.json({ 
-      success: false,
-      error: `Failed to prepare upload: ${error instanceof Error ? error.message : String(error)}` 
-    }, { status: 500 });
-  }
-}
-
-// New endpoint for client-side minting
-export async function PATCH(request: NextRequest) {
-  try {
-    const { walletAddress, metadataUri, name } = await request.json();
-    
-    if (!walletAddress || !metadataUri || !name) {
-      return NextResponse.json({ 
-        error: 'Wallet address, metadata URI, and name are required' 
-      }, { status: 400 });
-    }
-    
-    
-    // Return instructions for client-side minting
-    return NextResponse.json({
-      success: true,
-      metadataUri,
-      instructions: {
-        message: "The client should mint the NFT directly using the provided metadata URI",
-        walletToUse: walletAddress,
-        metadataUri: metadataUri,
-        name: name
+    // 4. Fetch the collection using the collection address from environment variables
+    let collection = undefined;
+    const collectionAddress = process.env.COLLECTION_ADDRESS;
+    if (collectionAddress) {
+      try {
+        collection = await fetchCollection(umi, publicKey(collectionAddress));
+        console.log('Collection fetched:', collection);
+      } catch (error) {
+        console.error('Error fetching collection:', error);
+        return NextResponse.json({ 
+          success: false, 
+          error: 'Failed to fetch collection data' 
+        }, { status: 500 });
       }
+    }
+    
+    // 5. Prepare the update transaction
+    const latestBlockhash = await umi.rpc.getLatestBlockhash();
+    const txBuilder = transactionBuilder().add(
+      update(umi, {
+        asset,
+        name: companionData.name,
+        uri: metadataUri,
+        collection, // Include the collection data
+      })
+    ).setBlockhash(latestBlockhash.blockhash);
+    
+    // 6. Build the transaction (Umi will automatically sign as authority)
+    const builtTx = txBuilder.build(umi);
+    
+    // 7. Serialize and return to client
+    const serializedTx = umi.transactions.serialize(builtTx);
+    const base64Tx = Buffer.from(serializedTx).toString('base64');
+    
+    console.log('Updating companion with:', {
+      assetAddress: assetAddress,
+      metadataUri: metadataUri,
+      payerPublicKey: payerPublicKey,
     });
     
+    return NextResponse.json({
+      success: true,
+      transaction: base64Tx,
+      metadataUri: metadataUri
+    });
   } catch (error) {
-    console.error('Error preparing mint instructions:', error);
-    return NextResponse.json({ 
-      success: false,
-      error: `Failed to prepare mint instructions: ${error instanceof Error ? error.message : String(error)}` 
-    }, { status: 500 });
+    console.error('Error preparing companion update:', error);
+    return NextResponse.json({ error: 'Failed to prepare companion update' }, { status: 500 });
   }
 }
 
@@ -337,4 +297,4 @@ export async function PUT(request: NextRequest) {
       details: error instanceof Error ? error.message : String(error)
     }, { status: 500 });
   }
-} 
+}
