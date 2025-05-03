@@ -117,15 +117,15 @@ export const CompanionDisplay: FC = () => {
   };
 
   return (
-    <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-md hover:shadow-lg transition-all duration-300 mb-8">
+    <div className="bg-white/90 backdrop-blur-sm rounded-lg p-6 shadow-md hover:shadow-lg transition-all duration-300 mb-8">
       <div className="flex flex-col md:flex-row items-center">
         <div className="md:w-1/3 flex justify-center mb-4 md:mb-0">
           <Image
             src={companion.image}
             alt={companion.name}
-            width={150}
-            height={150}
-            className="rounded-full border-4 border-[#ff6f61]"
+            width={200}
+            height={200}
+            className="rounded-lg"
           />
         </div>
         
@@ -174,9 +174,9 @@ export const CompanionDisplay: FC = () => {
             }
           </div>
           
-          <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4">
+          <div className="w-full bg-gray-200 rounded-md h-2.5 mb-4">
             <div 
-              className="bg-[#ff6f61] h-2.5 rounded-full" 
+              className="bg-[#ff6f61] h-2.5 rounded-md" 
               style={{ 
                 width: `${companion.xpForNextLevel ? 
                   Math.min((companion.experience / companion.xpForNextLevel) * 100, 100) : 0}%` 
