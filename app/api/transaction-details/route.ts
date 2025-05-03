@@ -2,11 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Connection, ParsedTransactionWithMeta } from '@solana/web3.js';
 import { getSolanaConnection } from '@/app/utils/solanaConnection';
 
+// Types
+interface TransactionExplanation {
+  type: string;
+  summary: string;
+  keyPoints?: string[];
+  additionalContext?: string;
+}
+
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const signature = searchParams.get('signature');
   const walletAddress = searchParams.get('wallet');
 
+  // Validate required parameters
   if (!signature) {
     return NextResponse.json(
       { error: 'Transaction signature is required' },
@@ -23,7 +32,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // Connect to Solana using Helius RPC endpoint from .env
-    const connection = new Connection(process.env.RPC_API_URL || 'https://api.devnet.solana.com', 'confirmed'); //TODO CHANGE
+    const connection = new Connection(/*process.env.RPC_API_URL ||*/ 'https://api.devnet.solana.com', 'confirmed'); //TODO CHANGE
     
     // Fetch the transaction details
     const transaction = await connection.getParsedTransaction(signature, {
@@ -37,76 +46,38 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Determine if this is a SEND or RECEIVE transaction
-    let action = 'OTHER';
+    // Determine initial transaction action based on transaction data
+    let action = determineInitialAction(transaction, walletAddress);
     
-    try {
-      // Check if the connected wallet is the fee payer (sender)
-      const feePayer = transaction.transaction.message.accountKeys[0].pubkey.toString();
-      
-      if (feePayer === walletAddress) {
-        action = 'SEND';
-      } else {
-        // Check if the wallet is a recipient by looking at token transfers or SOL transfers
-        const instructions = transaction.transaction.message.instructions;
-        const accountKeys = transaction.transaction.message.accountKeys.map(key => key.pubkey.toString());
-        
-        // If the wallet appears in the account keys but is not the fee payer, it's likely a RECEIVE
-        if (accountKeys.includes(walletAddress)) {
-          action = 'RECEIVE';
-        }
-        
-        // For more accurate detection, we could analyze the parsed instructions
-        // to look for specific token transfer programs and check the destination
-        if (transaction.meta && transaction.meta.postTokenBalances && transaction.meta.preTokenBalances) {
-          const preBalances = transaction.meta.preTokenBalances;
-          const postBalances = transaction.meta.postTokenBalances;
-          
-          // Check if any token account owned by this wallet increased in balance
-          for (let i = 0; i < postBalances.length; i++) {
-            const postBalance = postBalances[i];
-            const preBalance = preBalances.find(b => b.accountIndex === postBalance.accountIndex);
-            
-            if (postBalance.owner === walletAddress) {
-              if (!preBalance || Number(postBalance.uiTokenAmount.amount) > Number(preBalance.uiTokenAmount.amount)) {
-                action = 'RECEIVE';
-                break;
-              }
-            }
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error determining transaction action:', error);
-    }
-
+    // Get AI explanation from Helius - this will be our primary source of data
     let type = 'Transaction';
     let summary = 'See advanced details for more information';
+    let keyPoints = null;
+    let additionalContext = null;
     
     try {
-      const orbData = await getOrbTransactionData(signature);
-      if (orbData) {
-        type = orbData.type;
-        summary = orbData.summary;
+      const aiExplanation = await getHeliusAIExplanation(transaction);
+      
+      if (aiExplanation) {
+        type = aiExplanation.type;
+        summary = aiExplanation.summary;
+        keyPoints = aiExplanation.keyPoints;
+        additionalContext = aiExplanation.additionalContext;
+        
+        // Determine final action based on AI explanation data
+        action = determineActionFromExplanation(action, aiExplanation);
       }
-    } catch (error) {
-      console.error('Error fetching Orb transaction data:', error);
-    }
-
-    // Use Helius AI Transaction Explainer for AI explanation
-    let aiExplanation = null;
-    try {
-      aiExplanation = await getHeliusAIExplanation(transaction, 'mainnet-beta');
     } catch (error) {
       console.error('Error using Helius AI Explainer:', error);
     }
-
-    // Return combined data
+    
+    // Return combined data with clearer structure
     return NextResponse.json({
       type: type === "Unknown" ? "Generic" : type,
-      summary: type === "Unknown" || type === "Transaction" ? "See advanced details for more information" : summary.replace(/\.$/, ''),
-      aiExplanation: aiExplanation?.summary ? aiExplanation.summary.replace(/\.$/, '') : null,
-      action: determineAction(action, type, summary, aiExplanation?.summary || null)
+      summary: summary.replace(/\.$/, ''),
+      keyPoints: keyPoints,
+      additionalContext: additionalContext,
+      action: action
     });
   } catch (error) {
     console.error('Error fetching transaction details:', error);
@@ -118,86 +89,181 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// Helper function to determine the final action based on all available data
-function determineAction(
-  initialAction: string,
-  type: string,
-  summary: string,
-  aiExplanation: string | null
+/**
+ * Determines the initial transaction action based on transaction data
+ */
+function determineInitialAction(
+  transaction: ParsedTransactionWithMeta,
+  walletAddress: string
 ): string {
-  // If the transaction is already identified as SEND or RECEIVE, check if we need to override
-  if (aiExplanation) {
-    const lowerCaseExplanation = aiExplanation.toLowerCase();
-    if (lowerCaseExplanation.includes('claim') || lowerCaseExplanation.includes('mint')) {
-      return 'RECEIVE';
+  let action = 'OTHER';
+  
+  try {
+    // Check if the connected wallet is the fee payer (sender)
+    const feePayer = transaction.transaction.message.accountKeys[0].pubkey.toString();
+    
+    if (feePayer === walletAddress) {
+      action = 'SEND';
+    } else {
+      // Check if the wallet is a recipient by looking at token transfers or SOL transfers
+      const accountKeys = transaction.transaction.message.accountKeys.map(key => key.pubkey.toString());
+      
+      // If the wallet appears in the account keys but is not the fee payer, it's likely a RECEIVE
+      if (accountKeys.includes(walletAddress)) {
+        action = 'RECEIVE';
+      }
+      
+      // Check token balances for more accurate detection
+      if (transaction.meta && transaction.meta.postTokenBalances && transaction.meta.preTokenBalances) {
+        const preBalances = transaction.meta.preTokenBalances;
+        const postBalances = transaction.meta.postTokenBalances;
+        
+        // Check if any token account owned by this wallet increased in balance
+        for (let i = 0; i < postBalances.length; i++) {
+          const postBalance = postBalances[i];
+          const preBalance = preBalances.find(b => b.accountIndex === postBalance.accountIndex);
+          
+          if (postBalance.owner === walletAddress) {
+            if (!preBalance || Number(postBalance.uiTokenAmount.amount) > Number(preBalance.uiTokenAmount.amount)) {
+              action = 'RECEIVE';
+              break;
+            } else if (preBalance && Number(postBalance.uiTokenAmount.amount) < Number(preBalance.uiTokenAmount.amount)) {
+              // If token balance decreased and this wallet is the owner, it could be a BURN or SEND
+              // Check if the transaction has burn instructions or if tokens disappeared (not transferred)
+              const isBurn = detectBurnOperation(transaction);
+              if (isBurn) {
+                action = 'BURNED';
+              }
+            }
+          }
+        }
+      }
     }
+  } catch (error) {
+    console.error('Error determining transaction action:', error);
   }
   
-  if (type) {
-    const lowerCaseType = type.toLowerCase();
-    if (lowerCaseType.includes('claim') || lowerCaseType.includes('mint')) {
-      return 'RECEIVE';
+  return action;
+}
+
+/**
+ * Detects if a transaction contains a burn operation
+ */
+function detectBurnOperation(transaction: ParsedTransactionWithMeta): boolean {
+  try {
+    // Check for burn instructions in parsed instructions
+    if (transaction.meta?.innerInstructions) {
+      for (const innerInstructionSet of transaction.meta.innerInstructions) {
+        for (const instruction of innerInstructionSet.instructions) {
+          // Check for parsed instruction data
+          if ('parsed' in instruction && instruction.parsed) {
+            const parsedData = instruction.parsed;
+            
+            // Check for token program burn instruction
+            if (parsedData.type === 'burn' || 
+                (typeof parsedData === 'object' && 
+                 'info' in parsedData && 
+                 parsedData.info && 
+                 'instruction' in parsedData.info && 
+                 parsedData.info.instruction === 'Burn')) {
+              return true;
+            }
+          }
+        }
+      }
     }
+    
+    // Check for burn in the main instructions
+    if (transaction.transaction?.message?.instructions) {
+      for (const instruction of transaction.transaction.message.instructions) {
+        if ('parsed' in instruction && instruction.parsed) {
+          const parsedData = instruction.parsed;
+          
+          // Check for token program burn instruction
+          if (parsedData.type === 'burn' || 
+              (typeof parsedData === 'object' && 
+               'info' in parsedData && 
+               parsedData.info && 
+               'instruction' in parsedData.info && 
+               parsedData.info.instruction === 'Burn')) {
+            return true;
+          }
+        }
+      }
+    }
+    
+    // Check for program names that might indicate burning
+    const programIds = transaction.transaction?.message?.accountKeys
+      .filter(key => key.signer === false && key.writable === false)
+      .map(key => key.pubkey.toString());
+    
+    // Known burn program IDs (can be expanded)
+    const burnProgramIds = [
+      'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA', // Token Program
+      'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s', // Token Metadata Program
+      'CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d', // Core NFT program
+    ];
+    
+    if (programIds && programIds.some(id => burnProgramIds.includes(id))) {
+      // If a known burn program is involved, check logs for burn operations
+      if (transaction.meta?.logMessages) {
+        const logs = transaction.meta.logMessages.join(' ');
+        if (logs.toLowerCase().includes('burn') || 
+            logs.toLowerCase().includes('burning') || 
+            logs.toLowerCase().includes('burned')) {
+          return true;
+        }
+      }
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('Error detecting burn operation:', error);
+    return false;
   }
+}
+
+/**
+ * Determines the final action based on AI explanation data
+ */
+function determineActionFromExplanation(
+  initialAction: string,
+  aiExplanation: TransactionExplanation
+): string {
+  // Check for specific transaction types in the explanation
+  const checkForKeywords = (text: string | undefined | null): string | null => {
+    if (!text) return null;
+    
+    const lowerCaseText = text.toLowerCase();
+    if (lowerCaseText.includes('burn') || lowerCaseText.includes('burned')) return 'BURNED';
+    if (lowerCaseText.includes('claim') || lowerCaseText.includes('mint')) return 'RECEIVE';
+    return null;
+  };
   
-  if (summary) {
-    const lowerCaseSummary = summary.toLowerCase();
-    if (lowerCaseSummary.includes('claim') || lowerCaseSummary.includes('mint')) {
-      return 'RECEIVE';
-    }
-  }
+  // Check each field of the explanation for relevant keywords
+  const summaryAction = checkForKeywords(aiExplanation.summary);
+  if (summaryAction) return summaryAction;
+  
+  const typeAction = checkForKeywords(aiExplanation.type);
+  if (typeAction) return typeAction;
+  
+  const keyPointsAction = aiExplanation.keyPoints ? 
+    checkForKeywords(aiExplanation.keyPoints.join(' ')) : null;
+  if (keyPointsAction) return keyPointsAction;
+  
+  const contextAction = checkForKeywords(aiExplanation.additionalContext);
+  if (contextAction) return contextAction;
   
   return initialAction;
 }
 
-// Function to get transaction data
-async function getOrbTransactionData(
-  signature: string,
-  cluster: string = 'mainnet-beta'
-): Promise<{ type: string, summary: string } | null> {
-  try {
-    const heliusApiKey = process.env.HELIUS_API_KEY;
-    if (!heliusApiKey) {
-      console.warn('HELIUS_API_KEY not found in environment variables');
-      return null;
-    }
-
-    const response = await fetch(`https://api.helius.xyz/v0/transactions/?api-key=${heliusApiKey}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        transactions: [signature]
-      }),
-    });
-    
-    if (response.ok) {
-      const data = await response.json();
-      
-      if (data && data.length > 0 && data[0]) {
-        const txData = data[0];
-        const type = txData.type || txData.description?.split(' ')[0] || 'Transaction';
-        const summary = txData.description || 'Transaction details';
-        
-        return {
-          type,
-          summary
-        };
-      }
-    }
-    return null;
-  } catch (error) {
-    console.error('Error calling Helius Transaction API:', error);
-    return null;
-  }
-}
-
-// Function to call Helius AI Transaction Explainer
+/**
+ * Calls Helius AI Transaction Explainer API and returns structured data
+ */
 async function getHeliusAIExplanation(
   transaction: ParsedTransactionWithMeta,
   cluster: string = 'mainnet-beta'
-): Promise<{ type: string, summary: string } | null> {
+): Promise<TransactionExplanation | null> {
   try {
     const heliusApiKey = process.env.HELIUS_API_KEY;
     if (!heliusApiKey) {
@@ -226,25 +292,57 @@ async function getHeliusAIExplanation(
     }
 
     const data = await response.json();
+
+    console.log('Helius AI Explanation:', data.content);
     
     // Extract the content from the response
     if (data && data.content) {
-      const content = data.content;
-      
-      // Extract the transaction type from the first line or heading
-      const titleMatch = content.match(/^#\s*(.*?)(?:\n|$)/);
-      const type = titleMatch ? titleMatch[1].trim() : 'Transaction';
-      
-      // Use the rest of the content as the summary, removing markdown formatting
-      let summary = content
-        .replace(/^#.*\n/, '') // Remove the title
-        .replace(/<address>(.*?)<\/address>/g, '$1') // Remove address tags
-        .replace(/[•*]/g, '') // Remove bullet points and asterisks
-        .replace(/\.$/, '') // Remove trailing period
-        .trim();
-      
-      //console.log('Helius AI Explanation:', { type, summary });
-      return { type, summary };
+      // Handle structured object response
+      if (typeof data.content === 'object') {
+        const content = data.content;
+        
+        // Apply the same replacements to all text fields
+        const cleanText = (text: string) => {
+          return text
+            .replace(/<address>(.*?)<\/address>/g, '$1')
+            .replace(/[•*]/g, '')
+            .replace(/\.$/, '')
+            .trim();
+        };
+        
+        const summary = content.summary ? cleanText(content.summary) : 'Transaction details';
+        
+        // Process keyPoints array if it exists
+        let keyPoints = content.keyPoints;
+        if (keyPoints && Array.isArray(keyPoints)) {
+          keyPoints = keyPoints.map(point => cleanText(point));
+        }
+        
+        // Process additionalContext if it exists
+        const additionalContext = content.additionalContext ? 
+          cleanText(content.additionalContext) : undefined;
+        
+        return { 
+          type: content.header?.transactionType || 'Transaction', 
+          summary,
+          keyPoints,
+          additionalContext
+        };
+      } 
+      // Handle string response (legacy format)
+      else if (typeof data.content === 'string') {
+        const content = data.content;
+        const titleMatch = content.match(/^#\s*(.*?)(?:\n|$)/);
+        const type = titleMatch ? titleMatch[1].trim() : 'Transaction';
+        
+        let summary = content
+          .replace(/^#.*\n/, '')
+          .replace(/[•*]/g, '')
+          .replace(/\.$/, '')
+          .trim();
+        
+        return { type, summary };
+      }
     }
     
     return null;

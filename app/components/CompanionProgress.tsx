@@ -23,46 +23,82 @@ export const CompanionProgress: FC<CompanionProgressProps> = ({
   const [isSyncing, setIsSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [gameConfig, setGameConfig] = useState<{
+    levelThresholds: number[];
+    evolutionThresholds: number[];
+  } | null>(null);
   
-  // Calculate potential new level based on current experience + new XP
-  const calculateNewLevel = (currentLevel: number, currentExp: number, newExp: number) => {
-    const totalExp = currentExp + newExp;
-    // Simple level formula: level up every 100 XP
-    const newLevel = Math.floor(totalExp / 100);
-    return newLevel > currentLevel ? newLevel : currentLevel;
+  // Calculate level based on total XP and level thresholds
+  const calculateLevel = (totalExp: number) => {
+    if (!gameConfig) return 0;
+    
+    for (let i = gameConfig.levelThresholds.length - 1; i >= 0; i--) {
+      if (totalExp >= gameConfig.levelThresholds[i]) {
+        return i;
+      }
+    }
+    return 0;
+  };
+  
+  // Calculate evolution based on level and evolution thresholds
+  const calculateEvolution = (level: number) => {
+    if (!gameConfig) return 0;
+    
+    for (let i = gameConfig.evolutionThresholds.length - 1; i >= 0; i--) {
+      if (level >= gameConfig.evolutionThresholds[i]) {
+        return i;
+      }
+    }
+    return 0;
+  };
+  
+  // Calculate XP needed for next level
+  const getXpForNextLevel = (currentLevel: number, currentExp: number) => {
+    if (!gameConfig || currentLevel >= gameConfig.levelThresholds.length - 1) {
+      return 0; // Max level reached
+    }
+    
+    return gameConfig.levelThresholds[currentLevel + 1] - currentExp;
   };
 
-  // Fetch experience points on component mount
+  // Fetch game configuration and experience points on component mount
   useEffect(() => {
-    const fetchExperience = async () => {
+    const fetchData = async () => {
       if (!publicKey) return;
       
       setIsLoading(true);
       setError(null);
       
       try {
-        const response = await fetch(`/api/calculate-experience?wallet=${publicKey.toString()}`);
+        // Fetch game configuration
+        const configResponse = await fetch('/api/game-config');
+        if (!configResponse.ok) {
+          throw new Error('Failed to load game configuration');
+        }
+        const configData = await configResponse.json();
+        setGameConfig(configData);
         
-        if (!response.ok) {
+        // Fetch experience points
+        const expResponse = await fetch(`/api/calculate-experience?wallet=${publicKey.toString()}`);
+        if (!expResponse.ok) {
           throw new Error('Failed to calculate experience points');
         }
-        
-        const data = await response.json();
-        setExperiencePoints(data.experiencePoints);
+        const expData = await expResponse.json();
+        setExperiencePoints(expData.experiencePoints);
       } catch (err) {
-        console.error('Error fetching experience:', err);
-        setError('Failed to calculate experience points. Please try again later.');
+        console.error('Error fetching data:', err);
+        setError('Failed to load necessary data. Please try again later.');
       } finally {
         setIsLoading(false);
       }
     };
     
-    fetchExperience();
+    fetchData();
   }, [publicKey]);
   
   // Handle syncing progress
   const handleSyncProgress = async () => {
-    if (!publicKey || !signTransaction) {
+    if (!publicKey || !signTransaction || !gameConfig) {
       setError('Please connect your wallet');
       return;
     }
@@ -73,14 +109,16 @@ export const CompanionProgress: FC<CompanionProgressProps> = ({
     setSuccess(null);
 
     try {
+      const totalExp = companion.experience + experiencePoints;
+      const newLevel = calculateLevel(totalExp);
+      
       // Calculate the updated companion data
       const updatedCompanion = {
         ...companion,
-        experience: experiencePoints,
-        level: calculateNewLevel(companion.level, companion.experience, experiencePoints),
-        evolution: experiencePoints > 200 ? 3 : 
-                 experiencePoints > 100 ? 2 : 
-                 experiencePoints > 0 ? 1 : 0,
+        experience: totalExp,
+        level: newLevel,
+        evolution: calculateEvolution(newLevel),
+        xpForNextLevel: getXpForNextLevel(newLevel, totalExp),
         lastUpdated: new Date().toISOString()
       };
 
@@ -139,12 +177,15 @@ export const CompanionProgress: FC<CompanionProgressProps> = ({
           You've earned <span className="text-[#ff6f61] font-bold">{experiencePoints} XP</span>
         </p>
         
-        {experiencePoints > 0 && (
+        {experiencePoints > 0 && gameConfig && (
           <div className="mt-2">
             <p className="text-sm text-[#666]">
               Syncing will increase your companion's experience from {companion.experience} to {companion.experience + experiencePoints}.
-              {calculateNewLevel(companion.level, companion.experience, experiencePoints) > companion.level && 
-                ` Your companion will level up to level ${calculateNewLevel(companion.level, companion.experience, experiencePoints)}!`}
+              {calculateLevel(companion.experience + experiencePoints) > companion.level && 
+                ` Your companion will level up to level ${calculateLevel(companion.experience + experiencePoints)}!`}
+              {calculateEvolution(calculateLevel(companion.experience + experiencePoints)) > 
+                calculateEvolution(companion.level) && 
+                ` Your companion will evolve to stage ${calculateEvolution(calculateLevel(companion.experience + experiencePoints))}!`}
             </p>
           </div>
         )}

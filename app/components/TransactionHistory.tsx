@@ -11,7 +11,8 @@ import { CompanionDisplay } from './CompanionDisplay';
 interface TransactionDetail {
   type: string;
   summary: string;
-  aiExplanation: string | null;
+  keyPoints: string[] | null;
+  additionalContext: string | null;
   action: string;
 }
 
@@ -24,6 +25,7 @@ export const TransactionHistory: FC = () => {
   const [stats, setStats] = useState({ receive: 0, send: 0, days: 0 });
   const [hasCompanion, setHasCompanion] = useState<boolean | null>(null);
   const [checkingCompanion, setCheckingCompanion] = useState(false);
+  const [fetchingDetails, setFetchingDetails] = useState(false);
 
   // Check if the wallet owns a companion
   useEffect(() => {
@@ -89,32 +91,56 @@ export const TransactionHistory: FC = () => {
   // Fetch transaction details for each transaction
   useEffect(() => {
     const fetchTransactionDetails = async () => {
-      if (transactions.length === 0) return;
+      if (transactions.length === 0 || fetchingDetails) return;
 
-      const details: Record<string, TransactionDetail> = {};
+      setFetchingDetails(true);
+      const details: Record<string, TransactionDetail> = { ...transactionDetails };
       
-      for (const tx of transactions) {
-        try {
-          const response = await fetch(`/api/transaction-details?signature=${tx.signature}&wallet=${publicKey?.toString()}`);
-          if (response.ok) {
-            const data = await response.json();
-            details[tx.signature] = {
-              type: data.type || 'Unknown',
-              summary: data.summary || 'No summary available',
-              aiExplanation: data.aiExplanation,
-              action: data.action || 'UNKNOWN'
-            };
+      // Only fetch details for transactions we don't already have
+      const transactionsToFetch = transactions.filter(tx => !details[tx.signature]);
+      
+      if (transactionsToFetch.length === 0) {
+        setFetchingDetails(false);
+        return;
+      }
+      
+      // Process in batches to avoid overwhelming the API
+      const batchSize = 3;
+      for (let i = 0; i < transactionsToFetch.length; i += batchSize) {
+        const batch = transactionsToFetch.slice(i, i + batchSize);
+        
+        await Promise.all(batch.map(async (tx) => {
+          try {
+            const response = await fetch(`/api/transaction-details?signature=${tx.signature}&wallet=${publicKey?.toString()}`);
+            if (response.ok) {
+              const data = await response.json();
+              details[tx.signature] = {
+                type: data.type || 'Unknown',
+                summary: data.summary || 'No summary available',
+                keyPoints: data.keyPoints,
+                additionalContext: data.additionalContext,
+                action: data.action || 'UNKNOWN'
+              };
+            }
+          } catch (error) {
+            console.error(`Error fetching details for transaction ${tx.signature}:`, error);
           }
-        } catch (error) {
-          console.error(`Error fetching details for transaction ${tx.signature}:`, error);
+        }));
+        
+        // Update state after each batch
+        setTransactionDetails({ ...details });
+        
+        // Add a small delay between batches
+        if (i + batchSize < transactionsToFetch.length) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
         }
       }
       
-      setTransactionDetails(details);
+      setFetchingDetails(false);
     };
 
     fetchTransactionDetails();
-  }, [transactions, publicKey]);
+  }, [transactions, publicKey, transactionDetails, fetchingDetails]);
 
   // Calculate transaction statistics
   useEffect(() => {
@@ -160,7 +186,7 @@ export const TransactionHistory: FC = () => {
     <div className="w-full max-w-7xl mt-12 space-y-8 p-8 sm:p-12 bg-gradient-to-b from-[#A0EACF] to-[#E0B0E5] rounded-2xl">      
       {hasCompanion && <CompanionDisplay />}
       
-      {(loading || (transactions.length > 0 && Object.keys(transactionDetails).length < transactions.length)) ? (
+      {(loading || fetchingDetails) ? (
         <div className="flex flex-col items-center justify-center py-16 space-y-4">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#444]"></div>
           <p className="text-[#444] text-lg">Reading your on-chain activities...</p>
@@ -230,6 +256,8 @@ export const TransactionHistory: FC = () => {
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">SEND</span>
                           ) : transactionDetails[tx.signature]?.action === 'RECEIVE' ? (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">RECEIVE</span>
+                          ) : transactionDetails[tx.signature]?.action === 'BURNED' ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">BURN</span>
                           ) : (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">OTHER</span>
                           )}
@@ -242,7 +270,23 @@ export const TransactionHistory: FC = () => {
                         </td>
                         <td className="px-6 py-4 text-sm">
                           <div className="max-h-[150px] overflow-y-auto pr-3 text-[#555]">
-                            {transactionDetails[tx.signature]?.aiExplanation || 'No details available'}
+                            {transactionDetails[tx.signature]?.keyPoints && (
+                              <div className="mb-2">
+                                <ul className="list-disc pl-4">
+                                  {transactionDetails[tx.signature]?.keyPoints?.map((point, index) => (
+                                    <li key={index}>{point}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                            {transactionDetails[tx.signature]?.additionalContext && (
+                              <div className="mt-2 pt-2 border-t border-gray-200">
+                                {transactionDetails[tx.signature]?.additionalContext}
+                              </div>
+                            )}
+                            {!transactionDetails[tx.signature]?.keyPoints && 
+                             !transactionDetails[tx.signature]?.additionalContext && 
+                             'No detailed information available'}
                           </div>
                         </td>
                       </tr>
