@@ -178,6 +178,7 @@ export async function POST(request: NextRequest) {
         { trait_type: "Mood", value: companionData.mood },
         { trait_type: "DateOfBirth", value: companionData.dateOfBirth },
         { trait_type: "LastUpdated", value: new Date().toISOString() },
+        { trait_type: "XpForNextLevel", value: companionData.xpForNextLevel?.toString() || "100" },
         ...companionData.attributes
       ]
     };

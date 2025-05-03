@@ -138,6 +138,41 @@ export async function POST(request: NextRequest) {
       payer: serverSigner,
     }));
     
+    // Fetch game configuration to calculate XP for next level
+    let gameConfig;
+    try {
+      // Create a simple fetch function that works in Node.js environment
+      const fetch = (await import('node-fetch')).default;
+      const baseUrl = process.env.VERCEL_URL 
+        ? `https://${process.env.VERCEL_URL}` 
+        : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+      
+      const configResponse = await fetch(`${baseUrl}/api/game-config`);
+      if (!configResponse.ok) {
+        throw new Error('Failed to fetch game configuration');
+      }
+      gameConfig = await configResponse.json();
+    } catch (error) {
+      console.error('Error fetching game config:', error);
+      // Continue with default values if config fetch fails
+      gameConfig = {
+        levelThresholds: [0, 100, 250, 450, 700, 1000, 1350, 1750, 2200, 2700, 3300],
+        evolutionThresholds: [0, 1, 3, 6, 9]
+      };
+    }
+    
+    // Calculate XP needed for next level
+    const getXpForNextLevel = (currentLevel: number, currentExp: number) => {
+      if (!gameConfig || currentLevel >= gameConfig.levelThresholds.length - 1) {
+        return 100; // Default to 100 if config not loaded or max level reached
+      }
+      
+      return gameConfig.levelThresholds[currentLevel + 1] - currentExp;
+    };
+    
+    // Calculate XP for next level
+    const xpForNextLevel = getXpForNextLevel(companionData.level, companionData.experience);
+    
     // 2. Upload metadata to Irys (server-side with server wallet)
     const metadata = {
       name: companionData.name,
@@ -150,7 +185,10 @@ export async function POST(request: NextRequest) {
         { trait_type: "Mood", value: companionData.mood },
         { trait_type: "DateOfBirth", value: companionData.dateOfBirth },
         { trait_type: "LastUpdated", value: new Date().toISOString() },
-        ...companionData.attributes
+        { trait_type: "XpForNextLevel", value: xpForNextLevel.toString() },
+        ...companionData.attributes.filter(attr => 
+          !["Experience", "Level", "Evolution", "Mood", "DateOfBirth", "LastUpdated", "XpForNextLevel"].includes(attr.trait_type)
+        )
       ]
     };
     

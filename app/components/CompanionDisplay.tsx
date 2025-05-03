@@ -30,7 +30,16 @@ export const CompanionDisplay: FC = () => {
         
         const data = await response.json();
         if (data.companion) {
-          setCompanion(data.companion);
+          // Extract xpForNextLevel from attributes if it exists
+          const xpForNextLevelAttr = data.companion.attributes.find(
+            (attr: any) => attr.trait_type === 'XpForNextLevel'
+          );
+          
+          // Set the companion with the extracted xpForNextLevel
+          setCompanion({
+            ...data.companion,
+            xpForNextLevel: xpForNextLevelAttr ? Number(xpForNextLevelAttr.value) : 100 // Default to 100 if not found
+          });
           setMintAddress(data.mintAddress);
         }
       } catch (err) {
@@ -154,7 +163,7 @@ export const CompanionDisplay: FC = () => {
             
             {companion.attributes
               .filter(attr => 
-                !['Level', 'Experience', 'Evolution', 'Mood', 'DateOfBirth', 'LastUpdated'].includes(attr.trait_type)
+                !['Level', 'Experience', 'Evolution', 'Mood', 'DateOfBirth', 'LastUpdated', 'XpForNextLevel'].includes(attr.trait_type)
               )
               .map(attr => (
                 <div key={attr.trait_type}>
@@ -168,12 +177,17 @@ export const CompanionDisplay: FC = () => {
           <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4">
             <div 
               className="bg-[#ff6f61] h-2.5 rounded-full" 
-              style={{ width: `${Math.min(companion.experience / 100, 100)}%` }}
+              style={{ 
+                width: `${companion.xpForNextLevel ? 
+                  Math.min((companion.experience / companion.xpForNextLevel) * 100, 100) : 0}%` 
+              }}
             ></div>
           </div>
           
           <p className="text-sm text-[#666] mb-4">
-            {100 - companion.experience} XP until next level
+            {companion.xpForNextLevel ? 
+              `${companion.xpForNextLevel - companion.experience} XP until next level` : 
+              "Loading XP requirements..."}
           </p>
         </div>
       </div>

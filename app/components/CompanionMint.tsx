@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useState } from 'react';
+import { FC, useState, useEffect } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import Image from 'next/image';
 import { CompanionChoice } from '../types/companion';
@@ -36,6 +36,39 @@ export const CompanionMint: FC = () => {
   const [currentStep, setCurrentStep] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [gameConfig, setGameConfig] = useState<{
+    levelThresholds: number[];
+    evolutionThresholds: number[];
+  } | null>(null);
+
+  // Fetch game configuration on component mount
+  useEffect(() => {
+    const fetchGameConfig = async () => {
+      try {
+        const response = await fetch('/api/game-config');
+        if (!response.ok) {
+          throw new Error('Failed to load game configuration');
+        }
+        const configData = await response.json();
+        setGameConfig(configData);
+      } catch (err) {
+        console.error('Error fetching game config:', err);
+        // Don't set error state here to avoid showing error to user
+        // Just log it and use default values if needed
+      }
+    };
+    
+    fetchGameConfig();
+  }, []);
+
+  // Calculate XP needed for next level
+  const getXpForNextLevel = (currentLevel: number, currentExp: number) => {
+    if (!gameConfig || currentLevel >= gameConfig.levelThresholds.length - 1) {
+      return 100; // Default to 100 if config not loaded or max level reached
+    }
+    
+    return gameConfig.levelThresholds[currentLevel + 1] - currentExp;
+  };
 
   const handleMint = async () => {
     if (!publicKey || !selectedCompanion || !name.trim() || !signTransaction) {
@@ -49,16 +82,21 @@ export const CompanionMint: FC = () => {
     setCurrentStep('Preparing your companion...');
 
     try {
+      // Initial level and experience
+      const initialLevel = 0;
+      const initialExperience = 0;
+      
       // Create companion data
       const companion = {
         name: name.trim(),
         dateOfBirth: new Date().toISOString(),
         image: selectedCompanion.image,
         description: selectedCompanion.description,
-        experience: 0,
-        level: 0,
+        experience: initialExperience,
+        level: initialLevel,
         evolution: 0,
         mood: "Happy",
+        xpForNextLevel: getXpForNextLevel(initialLevel, initialExperience),
         attributes: [
           { trait_type: "Toys", value: "None" },
           { trait_type: "Background", value: "None" }

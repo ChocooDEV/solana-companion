@@ -8,6 +8,7 @@ export interface Companion {
   evolution: number;
   mood: string;
   lastUpdated?: string;
+  xpForNextLevel?: number;
   attributes: Array<{
     trait_type: string;
     value: string | number;
