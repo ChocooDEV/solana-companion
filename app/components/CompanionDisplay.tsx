@@ -186,7 +186,7 @@ export const CompanionDisplay: FC = () => {
           
           <p className="text-sm text-[#666] mb-4">
             {companion.xpForNextLevel ? 
-              `${companion.xpForNextLevel - companion.experience} XP until next level` : 
+              `${companion.xpForNextLevel} XP until next level` : 
               "Loading XP requirements..."}
           </p>
         </div>
