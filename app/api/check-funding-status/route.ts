@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Keypair } from '@solana/web3.js';
-import { getSolanaConnection } from '@/app/utils/solanaConnection';
+import { getSolanaConnection } from '../../utils/solanaConnection';
 import bs58 from 'bs58';
 
 export async function POST(request: NextRequest) {
