@@ -293,7 +293,7 @@ export default function Home() {
             {/* Unlocked companions */}
             <div className="bg-white/90 backdrop-blur-sm rounded-xl p-3 shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center">
               <Image
-                src="/companions/fluffy_0.png"
+                src="/companions/fluffy_1.png"
                 alt="Brown furry companion"
                 width={70}
                 height={70}
@@ -303,7 +303,7 @@ export default function Home() {
             
             <div className="bg-white/90 backdrop-blur-sm rounded-xl p-3 shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center">
               <Image
-                src="/companions/fluffy_0.png"
+                src="/companions/fluffy_2.png"
                 alt="Blue furry companion"
                 width={70}
                 height={70}
@@ -313,7 +313,7 @@ export default function Home() {
             
             <div className="bg-white/90 backdrop-blur-sm rounded-xl p-3 shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center">
               <Image
-                src="/companions/fluffy_0.png"
+                src="/companions/ember_0.png"
                 alt="Brown companion with big eyes"
                 width={70}
                 height={70}
@@ -330,7 +330,7 @@ export default function Home() {
               </div>
               <div className="opacity-30 blur-sm">
                 <Image
-                  src="/companions/fluffy_0.png"
+                  src="/companions/ember_1.png"
                   alt="Locked companion"
                   width={70}
                   height={70}
@@ -346,7 +346,7 @@ export default function Home() {
               </div>
               <div className="opacity-30 blur-sm">
                 <Image  
-                  src="/companions/fluffy_0.png"
+                  src="/companions/ember_2.png"
                   alt="Locked companion"
                   width={70}
                   height={70}
@@ -362,7 +362,7 @@ export default function Home() {
               </div>
               <div className="opacity-30 blur-sm">
                 <Image
-                  src="/companions/fluffy_0.png"
+                  src="/companions/sparky_0.png"
                   alt="Locked companion"
                   width={70}
                   height={70}
@@ -378,7 +378,7 @@ export default function Home() {
               </div>
               <div className="opacity-30 blur-sm">
                 <Image
-                  src="/companions/fluffy_0.png"
+                  src="/companions/sparky_1.png"
                   alt="Locked companion"
                   width={70}
                   height={70}

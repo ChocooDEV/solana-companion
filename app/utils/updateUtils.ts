@@ -15,6 +15,22 @@ export async function updateCompanionData(
 
     console.log('Using wallet address:', wallet.publicKey.toString());
 
+    // Fetch game configuration to get the correct evolution image
+    const configResponse = await fetch('/api/game-config');
+    if (!configResponse.ok) {
+      throw new Error('Failed to load game configuration');
+    }
+    const gameConfig = await configResponse.json();
+    
+    // Get the correct image for this companion's evolution
+    const companionName = updatedCompanion.name.toLowerCase();
+    if (gameConfig.companionImages && 
+        gameConfig.companionImages[companionName] && 
+        gameConfig.companionImages[companionName][updatedCompanion.evolution]) {
+      // Update the image based on evolution
+      updatedCompanion.image = gameConfig.companionImages[companionName][updatedCompanion.evolution];
+    }
+
     // 1. Get funding transaction
     const fundingResponse = await fetch(`/api/update-companion?walletAddress=${wallet.publicKey.toString()}`);
     const fundingResult = await fundingResponse.json();
