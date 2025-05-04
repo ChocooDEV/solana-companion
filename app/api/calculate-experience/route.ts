@@ -5,6 +5,7 @@ import { getRpcUrl } from '@/app/utils/solanaConnection';
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const walletAddress = searchParams.get('wallet');
+  const lastUpdatedStr = searchParams.get('lastUpdated');
 
   if (!walletAddress) {
     return NextResponse.json(
@@ -16,6 +17,42 @@ export async function GET(request: NextRequest) {
   try {
     // Validate the wallet address
     const publicKey = new PublicKey(walletAddress);
+    
+    // Check if the companion was updated today
+    let canSync = true;
+    let hoursUntilNextSync = 0;
+    
+    if (lastUpdatedStr) {
+      const lastUpdated = new Date(lastUpdatedStr);
+      const now = new Date();
+      
+      // Check if the last update was today (same day)
+      const lastUpdateDay = lastUpdated.toDateString();
+      const todayDay = now.toDateString();
+      
+      if (lastUpdateDay === todayDay) {
+        canSync = false;
+        
+        // Calculate hours until next sync (midnight)
+        const tomorrow = new Date(now);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(0, 0, 0, 0);
+        
+        const hoursRemaining = (tomorrow.getTime() - now.getTime()) / (1000 * 60 * 60);
+        hoursUntilNextSync = Math.ceil(hoursRemaining);
+      }
+    }
+    
+    // If can't sync, return early with a message
+    if (!canSync) {
+      return NextResponse.json({
+        success: true,
+        experiencePoints: 0,
+        canSync: false,
+        message: `You've already synced today. You can sync again in ${hoursUntilNextSync} hours.`,
+        hoursUntilNextSync
+      });
+    }
     
     // Connect to Solana using the utility function
     const rpcUrl = await getRpcUrl();
@@ -93,6 +130,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       experiencePoints,
+      canSync: true,
       transactionCount: recentSignatures.length,
       lastUpdateTime: new Date().toISOString(),
       currentTime: new Date().toISOString()

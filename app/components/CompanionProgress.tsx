@@ -78,13 +78,23 @@ export const CompanionProgress: FC<CompanionProgressProps> = ({
         const configData = await configResponse.json();
         setGameConfig(configData);
         
+        // Get the last updated date from companion attributes
+        const lastUpdatedAttr = companion.attributes.find(attr => attr.trait_type === "LastUpdated");
+        const lastUpdated = lastUpdatedAttr ? lastUpdatedAttr.value : null;
+        
         // Fetch experience points
-        const expResponse = await fetch(`/api/calculate-experience?wallet=${publicKey.toString()}`);
+        const expResponse = await fetch(`/api/calculate-experience?wallet=${publicKey.toString()}&lastUpdated=${lastUpdated || ''}`);
         if (!expResponse.ok) {
           throw new Error('Failed to calculate experience points');
         }
         const expData = await expResponse.json();
+        
         setExperiencePoints(expData.experiencePoints);
+        
+        // If user can't sync today, show a message
+        if (expData.canSync === false) {
+          setError(expData.message);
+        }
       } catch (err) {
         console.error('Error fetching data:', err);
         setError('Failed to load necessary data. Please try again later.');
@@ -94,7 +104,7 @@ export const CompanionProgress: FC<CompanionProgressProps> = ({
     };
     
     fetchData();
-  }, [publicKey]);
+  }, [publicKey, companion.attributes]);
   
   // Handle syncing progress
   const handleSyncProgress = async () => {
@@ -135,6 +145,30 @@ export const CompanionProgress: FC<CompanionProgressProps> = ({
       if (result.success) {
         setSuccess('Progress synced successfully!');
         onUpdate(updatedCompanion);
+        
+        // Reset experience points after successful sync
+        setExperiencePoints(0);
+        
+        // Refresh the component data
+        const fetchUpdatedData = async () => {
+          try {
+            // Get the last updated date from companion attributes
+            const lastUpdatedAttr = updatedCompanion.attributes.find(attr => attr.trait_type === "LastUpdated");
+            const lastUpdated = lastUpdatedAttr ? lastUpdatedAttr.value : null;
+            
+            // Fetch experience points with updated lastUpdated value
+            const expResponse = await fetch(`/api/calculate-experience?wallet=${publicKey.toString()}&lastUpdated=${lastUpdated || ''}`);
+            if (expResponse.ok) {
+              const expData = await expResponse.json();
+              // This should be 0 if we just synced, but we update it anyway
+              setExperiencePoints(expData.experiencePoints);
+            }
+          } catch (err) {
+            console.error('Error refreshing data after sync:', err);
+          }
+        };
+        
+        fetchUpdatedData();
       } else {
         throw new Error(result.message);
       }
@@ -193,16 +227,20 @@ export const CompanionProgress: FC<CompanionProgressProps> = ({
       
       <button
         onClick={handleSyncProgress}
-        disabled={isSyncing || experiencePoints === 0}
+        disabled={isSyncing || experiencePoints === 0 || error?.includes("already synced")}
         className={`bg-[#ff6f61] hover:bg-[#ff4f41] text-white font-medium py-2 px-6 rounded-lg transition duration-300 ease-in-out ${
-          (isSyncing || experiencePoints === 0) ? 'opacity-50 cursor-not-allowed' : ''
+          (isSyncing || experiencePoints === 0 || error?.includes("already synced")) ? 'opacity-50 cursor-not-allowed' : ''
         }`}
       >
         {isSyncing ? 'Syncing...' : 'Sync My Progress'}
       </button>
+
+      <p className="text-sm text-[#666] italic">
+        You can only sync your progress every 24 hours.
+      </p>
       
       <p className="mt-4 text-sm text-[#666]">
-        Last updated: {companion.attributes.find(attr => attr.trait_type === "LastUpdated")?.value ? 
+        Last synced: {companion.attributes.find(attr => attr.trait_type === "LastUpdated")?.value ? 
           new Date(companion.attributes.find(attr => attr.trait_type === "LastUpdated")?.value as string).toLocaleString() : 
           'Never'}
       </p>
