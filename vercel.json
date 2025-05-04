@@ -4,5 +4,14 @@
         "path": "/api/cron/update-companions",
         "schedule": "0 0 * * *"
       }
+    ],
+    "builds": [
+      {
+        "src": "package.json",
+        "use": "@vercel/next",
+        "config": {
+          "installCommand": "npm install --legacy-peer-deps"
+        }
+      }
     ]
   }
