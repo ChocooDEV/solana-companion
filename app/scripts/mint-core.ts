@@ -27,7 +27,7 @@ async function mintCoreNFT() {
     
     // Add Irys uploader to UMI
     umi.use(irysUploader({
-        address: "https://devnet.irys.xyz",
+        address: "https://devnet.irys.xyz", // TODO: Change to mainnet if needed
         payer: signer,
     }));
       
