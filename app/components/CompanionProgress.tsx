@@ -208,7 +208,10 @@ export const CompanionProgress: FC<CompanionProgressProps> = ({
       
       <div className="mb-6">
         <p className="text-lg font-medium text-[#333]">
-          You've earned <span className="text-[#ff6f61] font-bold">{experiencePoints} XP</span>
+          {error?.includes("already synced") ?
+            "No more experience points for today!" :
+            `You've earned <span className="text-[#ff6f61] font-bold">{experiencePoints} XP</span>`
+          }
         </p>
         
         {experiencePoints > 0 && gameConfig && (
