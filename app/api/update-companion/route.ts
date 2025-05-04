@@ -11,7 +11,7 @@ import {
   signerIdentity,
   createSignerFromKeypair
 } from '@metaplex-foundation/umi';
-import { getRpcUrl } from '@/app/utils/solanaConnection';
+import { getRpcUrl } from '../../utils/solanaConnection';
 import { Connection, Transaction, PublicKey, SystemProgram } from '@solana/web3.js';
 import bs58 from 'bs58';
 import { irysUploader } from '@metaplex-foundation/umi-uploader-irys';

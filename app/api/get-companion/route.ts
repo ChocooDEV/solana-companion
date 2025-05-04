@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
 import { publicKey } from '@metaplex-foundation/umi';
 import { fetchAssetsByOwner } from '@metaplex-foundation/mpl-core';
-import { getRpcUrl } from '@/app/utils/solanaConnection';
+import { getRpcUrl } from '../../utils/solanaConnection';
 import { Companion, CompanionAttribute } from '@/app/types/companion';
 
 // Define interface for the metadata structure

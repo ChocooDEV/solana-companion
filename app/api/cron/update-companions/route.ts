@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { fetchAssetsByCollection } from '@metaplex-foundation/mpl-core';
 import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
 import { publicKey } from '@metaplex-foundation/umi';
-import { getRpcUrl } from '@/app/utils/solanaConnection';
+import { getRpcUrl } from '../../../utils/solanaConnection';
 
 export async function GET(request: NextRequest) {
   // Verify this is a legitimate cron job from Vercel

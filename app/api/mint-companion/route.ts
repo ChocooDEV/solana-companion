@@ -4,7 +4,7 @@ import { irysUploader } from '@metaplex-foundation/umi-uploader-irys';
 import { signerIdentity } from '@metaplex-foundation/umi';
 import Irys from '@irys/sdk';
 import { Connection, Transaction, SystemProgram, PublicKey } from '@solana/web3.js';
-import { getRpcUrl } from '@/app/utils/solanaConnection';
+import { getRpcUrl } from '../../utils/solanaConnection';
 import bs58 from 'bs58';
 import { Transaction as UmiTransaction } from '@metaplex-foundation/umi';
 

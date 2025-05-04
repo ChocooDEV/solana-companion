@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Transaction } from '@solana/web3.js';
-import { getSolanaConnection } from '@/app/utils/solanaConnection';
+import { getSolanaConnection } from '../../utils/solanaConnection';
 
 export async function POST(request: NextRequest) {
   try {
