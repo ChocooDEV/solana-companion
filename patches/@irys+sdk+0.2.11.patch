@@ -1,0 +1,15 @@
+diff --git a/node_modules/@irys/sdk/build/esm/node/upload.js b/node_modules/@irys/sdk/build/esm/node/upload.js
+index 7953e6c..3c02891 100644
+--- a/node_modules/@irys/sdk/build/esm/node/upload.js
++++ b/node_modules/@irys/sdk/build/esm/node/upload.js
+@@ -4,8 +4,8 @@ import mime from "mime-types";
+ import inquirer from "inquirer";
+ import { Readable } from "stream";
+ import { basename, join, relative, resolve, sep } from "path";
+-import parse from "csv-parse";
+-import stringify from "csv-stringify";
++import { parse } from 'csv-parse';
++import { stringify } from 'csv-stringify';
+ export const checkPath = async (path) => {
+     return promises
+         .stat(path)
