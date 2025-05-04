@@ -292,8 +292,6 @@ async function getHeliusAIExplanation(
     }
 
     const data = await response.json();
-
-    console.log('Helius AI Explanation:', data.content);
     
     // Extract the content from the response
     if (data && data.content) {
