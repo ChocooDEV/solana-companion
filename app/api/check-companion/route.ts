@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     // Create UMI instance using the utility function
     const rpcUrl = await getRpcUrl();
     const umi = createUmi(rpcUrl);
-    const collectionAddress = process.env.COLLECTION_ADDRESS || '6GfRWbTgpMJB51hXzp5CuDVGwVTFhAFCJvxqQEswe2bY';
+    const collectionAddress = process.env.COLLECTION_ADDRESS || '6WyrLJPgJgk3DU9gWUjPWGcKfQ2BhdpnQ3p6jLoi12Sh';
     
     // Fetch all assets owned by the wallet
     const assets = await fetchAssetsByOwner(umi, publicKey(walletAddress));

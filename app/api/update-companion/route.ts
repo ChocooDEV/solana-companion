@@ -186,7 +186,7 @@ export async function POST(request: NextRequest) {
         { trait_type: "DateOfBirth", value: companionData.dateOfBirth },
         { trait_type: "LastUpdated", value: new Date().toISOString() },
         { trait_type: "XpForNextLevel", value: xpForNextLevel.toString() },
-        ...companionData.attributes.filter(attr => 
+        ...companionData.attributes.filter((attr: { trait_type: string }) => 
           !["Experience", "Level", "Evolution", "Mood", "DateOfBirth", "LastUpdated", "XpForNextLevel"].includes(attr.trait_type)
         )
       ]
