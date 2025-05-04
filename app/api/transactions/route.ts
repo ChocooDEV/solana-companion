@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PublicKey, Connection } from '@solana/web3.js';
-import { getSolanaConnection } from '@/app/utils/solanaConnection';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;

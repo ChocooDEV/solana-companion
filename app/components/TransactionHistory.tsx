@@ -1,11 +1,9 @@
 'use client';
 
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useState, useCallback } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { ConfirmedSignatureInfo } from '@solana/web3.js';
 import { CompanionMint } from './CompanionMint';
-import { checkCompanionOwnership } from '../services/companionService';
-import { Connection } from '@solana/web3.js';
 import { CompanionDisplay } from './CompanionDisplay';
 
 interface TransactionDetail {
@@ -57,7 +55,7 @@ export const TransactionHistory: FC = () => {
   }, [publicKey, connected]);
 
   // Create a function to fetch transactions that can be called on demand
-  const fetchTransactions = async () => {
+  const fetchTransactions = useCallback(async () => {
     if (!connected || !publicKey) {
       setTransactions([]);
       return;
@@ -81,12 +79,12 @@ export const TransactionHistory: FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [connected, publicKey]);
 
   // Use the fetchTransactions function in the useEffect
   useEffect(() => {
     fetchTransactions();
-  }, [publicKey, connected]);
+  }, [fetchTransactions]);
 
   // Fetch transaction details for each transaction
   useEffect(() => {

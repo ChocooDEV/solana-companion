@@ -3,8 +3,6 @@
 import { FC, useEffect, useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { Companion } from '../types/companion';
-import { getSolanaConnection } from '../utils/solanaConnection';
-import { Transaction } from '@solana/web3.js';
 
 interface CompanionProgressProps {
   companion: Companion;
@@ -17,7 +15,7 @@ export const CompanionProgress: FC<CompanionProgressProps> = ({
   mintAddress, 
   onUpdate 
 }) => {
-  const { publicKey, wallet, signTransaction } = useWallet();
+  const { publicKey, signTransaction } = useWallet();
   const [experiencePoints, setExperiencePoints] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -217,7 +215,7 @@ export const CompanionProgress: FC<CompanionProgressProps> = ({
         {experiencePoints > 0 && gameConfig && (
           <div className="mt-2">
             <p className="text-sm text-[#666]">
-              Syncing will increase your companion's experience from {companion.experience} to {companion.experience + experiencePoints}.
+              Syncing will increase your companion&apos;s experience from {companion.experience} to {companion.experience + experiencePoints}.
               {calculateLevel(companion.experience + experiencePoints) > companion.level && 
                 ` Your companion will level up to level ${calculateLevel(companion.experience + experiencePoints)}!`}
               {calculateEvolution(calculateLevel(companion.experience + experiencePoints)) > 

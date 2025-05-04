@@ -126,6 +126,7 @@ export async function POST(request: NextRequest) {
         }, { status: 400 });
       }
     } catch (error) {
+      console.error('Error verifying funding transaction:', error);
       return NextResponse.json({ 
         success: false, 
         error: 'Failed to verify funding transaction' 

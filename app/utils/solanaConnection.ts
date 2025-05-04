@@ -1,7 +1,7 @@
 import { Connection, Commitment } from '@solana/web3.js';
 
 // Cache the connection to avoid creating a new one for each request
-let connectionCache: { [key: string]: Connection } = {};
+const connectionCache: { [key: string]: Connection } = {};
 
 export async function getRpcUrl() {
   try {

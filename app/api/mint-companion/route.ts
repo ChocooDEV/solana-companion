@@ -1,15 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
-import { fetchCollection } from '@metaplex-foundation/mpl-core';
-import { generateSigner, publicKey } from '@metaplex-foundation/umi';
 import { irysUploader } from '@metaplex-foundation/umi-uploader-irys';
-import { create } from '@metaplex-foundation/mpl-core';
 import { signerIdentity } from '@metaplex-foundation/umi';
 import Irys from '@irys/sdk';
-import { Keypair, Connection, Transaction, SystemProgram, PublicKey } from '@solana/web3.js';
-import { mintCompanionNFT } from '@/app/utils/mintUtils';
+import { Connection, Transaction, SystemProgram, PublicKey } from '@solana/web3.js';
 import { getRpcUrl } from '@/app/utils/solanaConnection';
 import bs58 from 'bs58';
+import { Transaction as UmiTransaction } from '@metaplex-foundation/umi';
 
 // Step 1: Get funding transaction
 export async function GET(request: NextRequest) {
@@ -115,8 +112,8 @@ export async function POST(request: NextRequest) {
       signMessage: async (message: Uint8Array) => {
         return umi.eddsa.sign(message, serverWallet);
       },
-      signTransaction: async (transaction: any) => transaction,
-      signAllTransactions: async (transactions: any[]) => transactions,
+      signTransaction: async (transaction: unknown) => transaction as UmiTransaction,
+      signAllTransactions: async (transactions: unknown[]) => transactions as UmiTransaction[],
     };
     
     // Use the signer with UMI

@@ -6,6 +6,17 @@ import { irysUploader } from '@metaplex-foundation/umi-uploader-irys';
 import bs58 from 'bs58';
 import { createSignerFromKeypair } from '@metaplex-foundation/umi';
 
+// Define interfaces for the metadata structure
+interface MetadataAttribute {
+  trait_type: string;
+  value: string;
+}
+
+interface CompanionMetadata {
+  attributes?: MetadataAttribute[];
+  [key: string]: unknown;
+}
+
 // This endpoint should be protected and only called by a scheduled job
 export async function POST(request: NextRequest) {
   // Check for authorization - in a real app, use a secure method
@@ -50,14 +61,14 @@ export async function POST(request: NextRequest) {
         const asset = await fetchAsset(umi, publicKey(companion.assetAddress));
         
         // Get existing metadata
-        let metadata = {};
+        let metadata: CompanionMetadata = {};
         if (asset.uri) {
           const response = await fetch(asset.uri);
           metadata = await response.json();
         }
         
         // Check last update time
-        const lastUpdatedAttr = (metadata as any).attributes?.find((attr: any) => attr.trait_type === "LastUpdated");
+        const lastUpdatedAttr = metadata.attributes?.find((attr) => attr.trait_type === "LastUpdated");
         const lastUpdated = lastUpdatedAttr ? new Date(lastUpdatedAttr.value) : null;
         
         // If no last update or last update was more than 3 days ago, make companion sad
@@ -69,7 +80,7 @@ export async function POST(request: NextRequest) {
           const updatedMetadata = {
             ...metadata,
             attributes: [
-              ...((metadata as any).attributes || []).filter((attr: any) => attr.trait_type !== "Mood"),
+              ...(metadata.attributes || []).filter((attr) => attr.trait_type !== "Mood"),
               { trait_type: "Mood", value: "Sad" }
             ]
           };

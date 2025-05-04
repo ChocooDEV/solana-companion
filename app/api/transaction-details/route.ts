@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Connection, ParsedTransactionWithMeta } from '@solana/web3.js';
-import { getSolanaConnection } from '@/app/utils/solanaConnection';
 
 // Types
 interface TransactionExplanation {
@@ -333,7 +332,7 @@ async function getHeliusAIExplanation(
         const titleMatch = content.match(/^#\s*(.*?)(?:\n|$)/);
         const type = titleMatch ? titleMatch[1].trim() : 'Transaction';
         
-        let summary = content
+        const summary = content
           .replace(/^#.*\n/, '')
           .replace(/[•*]/g, '')
           .replace(/\.$/, '')

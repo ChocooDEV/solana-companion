@@ -24,15 +24,6 @@ export async function GET(request: NextRequest) {
     // Fetch all assets owned by the wallet
     const assets = await fetchAssetsByOwner(umi, publicKey(walletAddress));
     
-    // Custom replacer function to handle BigInt values
-    const replacer = (key: string, value: any) => {
-      // Convert BigInt to String during serialization
-      if (typeof value === 'bigint') {
-        return value.toString();
-      }
-      return value;
-    };
-    
     // Find all assets that belong to our collection
     const companionAssets = assets.filter(asset => {
       // Check if the asset has an updateAuthority of type Collection

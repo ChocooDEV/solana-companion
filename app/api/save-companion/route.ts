@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Companion } from '../../types/companion';
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,7 +16,7 @@ export async function POST(request: NextRequest) {
     
     return NextResponse.json({
       success: true,
-      message: 'Companion data saved successfully on Irys',
+      message: 'Companion data saved successfully on Irys', // TODO: Remove this message
       metadataUri
     });
   } catch (error) {

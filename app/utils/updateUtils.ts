@@ -1,5 +1,4 @@
-import { Connection, Transaction, PublicKey } from '@solana/web3.js';
-import { WalletContextState } from '@solana/wallet-adapter-react';
+import { Transaction, PublicKey, VersionedTransaction } from '@solana/web3.js';
 import { Companion } from '../types/companion';
 import { getSolanaConnection } from './solanaConnection';
 
@@ -85,20 +84,11 @@ export async function updateCompanionData(
     // 4. Client signs and sends the update transaction
     const transactionBuffer = Buffer.from(result.transaction, 'base64');
     
-    // Import required classes for versioned transactions
-    const { VersionedTransaction } = require('@solana/web3.js');
-    
     // Deserialize as a versioned transaction
     const versionedTransaction = VersionedTransaction.deserialize(transactionBuffer);
     
-    // Get the keypair from the wallet
-    const keypair = {
-      publicKey: wallet.publicKey,
-      secretKey: null // We don't have access to the secret key
-    };
-    
-    // Sign the transaction using the wallet adapter
-    const signedTransaction = await wallet.signTransaction(versionedTransaction);
+    // Update the wallet type to accept VersionedTransaction
+    const signedTransaction = await (wallet.signTransaction as unknown as (transaction: VersionedTransaction) => Promise<VersionedTransaction>)(versionedTransaction);
     
     // Send the signed transaction
     const signature = await connection.sendRawTransaction(

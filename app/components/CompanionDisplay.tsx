@@ -3,7 +3,7 @@
 import { FC, useEffect, useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import Image from 'next/image';
-import { Companion } from '../types/companion';
+import { Companion, CompanionAttribute } from '../types/companion';
 import { CompanionProgress } from './CompanionProgress';
 
 export const CompanionDisplay: FC = () => {
@@ -12,7 +12,6 @@ export const CompanionDisplay: FC = () => {
   const [mintAddress, setMintAddress] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showUpdateForm, setShowUpdateForm] = useState(false);
 
   useEffect(() => {
     const fetchCompanion = async () => {
@@ -32,7 +31,7 @@ export const CompanionDisplay: FC = () => {
         if (data.companion) {
           // Extract xpForNextLevel from attributes if it exists
           const xpForNextLevelAttr = data.companion.attributes.find(
-            (attr: any) => attr.trait_type === 'XpForNextLevel'
+            (attr: CompanionAttribute) => attr.trait_type === 'XpForNextLevel'
           );
           
           // Set the companion with the extracted xpForNextLevel
@@ -55,7 +54,6 @@ export const CompanionDisplay: FC = () => {
 
   const handleCompanionUpdate = (updatedCompanion: Companion) => {
     setCompanion(updatedCompanion);
-    setShowUpdateForm(false);
   };
 
   if (loading) {

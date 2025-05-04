@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PublicKey } from '@solana/web3.js';
 import { fetchAssetsByCollection } from '@metaplex-foundation/mpl-core';
 import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
 import { publicKey } from '@metaplex-foundation/umi';
-import { getSolanaConnection, getRpcUrl } from '@/app/utils/solanaConnection';
+import { getRpcUrl } from '@/app/utils/solanaConnection';
 
 export async function GET(request: NextRequest) {
   // Verify this is a legitimate cron job from Vercel
@@ -13,9 +12,6 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Connect to Solana using the utility function
-    const connection = await getSolanaConnection('confirmed');
-    
     // Get the collection address
     const collectionAddress = process.env.COLLECTION_ADDRESS || '6WyrLJPgJgk3DU9gWUjPWGcKfQ2BhdpnQ3p6jLoi12Sh';
     

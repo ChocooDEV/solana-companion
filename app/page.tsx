@@ -21,7 +21,7 @@ export default function Home() {
     }, 3000); // Change image every 3 seconds
 
     return () => clearInterval(interval);
-  }, []);
+  }, [companionImages.length]);
 
   const handleStartJourney = () => {
     router.push("/transactions");
@@ -132,7 +132,7 @@ export default function Home() {
                   Keep your streak alive and your Companion will be in a good mood
                 </p>
                 <p className="text-[#555] mb-3 leading-relaxed">
-                  Forget to check in? Uh-oh! Your Companion's mood will drop...
+                  Forget to check in? Uh-oh! Your Companion&apos;s mood will drop...
                 </p>
                 <p className="text-[#555] leading-relaxed">
                   Stack that XP to unlock epic evolutions and new customizations
@@ -157,7 +157,7 @@ export default function Home() {
                       Your Companion follows you everywhere
                     </p>
                     <p className="text-[#555] mb-3 leading-relaxed">
-                      Simply connect your wallet no matter what device you're on to get your XP
+                      Simply connect your wallet no matter what device you&apos;re on to get your XP
                     </p>
                     <p className="text-[#555] leading-relaxed">
                       Show off your Companion to your friends and make them jealous
@@ -219,9 +219,9 @@ export default function Home() {
               </div>
               
               <div className="md:w-1/2 text-left">
-                <h3 className="text-2xl font-bold text-[#333] mb-4 animate-fadeIn">Powered by Solana's Ecosystem</h3>
+                <h3 className="text-2xl font-bold text-[#333] mb-4 animate-fadeIn">Powered by Solana&apos;s Ecosystem</h3>
                 <p className="text-[#555] mb-4 leading-relaxed animate-fadeIn animation-delay-200">
-                  We leverage the best of Solana's ecosystem to create a seamless and engaging experience for your Companion journey
+                  We leverage the best of Solana&apos;s ecosystem to create a seamless and engaging experience for your Companion journey
                 </p>
                 
                 <div className="space-y-6 mt-6">
@@ -234,7 +234,7 @@ export default function Home() {
                     <div>
                       <h4 className="font-bold text-[#333]">Irys for Permanent Storage</h4>
                       <p className="text-[#555] leading-relaxed">
-                        Your Companion's data is securely stored on <a href="https://irys.xyz/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Irys</a>, ensuring permanent and decentralized storage of all your achievements and customizations
+                        Your Companion&apos;s data is securely stored on <a href="https://irys.xyz/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Irys</a>, ensuring permanent and decentralized storage of all your achievements and customizations
                       </p>
                     </div>
                   </div>
@@ -262,7 +262,7 @@ export default function Home() {
                     <div>
                       <h4 className="font-bold text-[#333]">Metaplex for NFTs</h4>
                       <p className="text-[#555] leading-relaxed">
-                        We use <a href="https://www.metaplex.com/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Metaplex</a> to create and manage your Companion's NFTs
+                        We use <a href="https://www.metaplex.com/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Metaplex</a> to create and manage your Companion&apos;s NFTs
                       </p>
                     </div>
                   </div>

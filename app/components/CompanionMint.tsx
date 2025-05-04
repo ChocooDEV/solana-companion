@@ -4,7 +4,7 @@ import { FC, useState, useEffect } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import Image from 'next/image';
 import { CompanionChoice } from '../types/companion';
-import { Connection, Transaction, Message, PublicKey } from '@solana/web3.js';
+import { Transaction } from '@solana/web3.js';
 
 const companionChoices: CompanionChoice[] = [
   {
@@ -201,7 +201,7 @@ export const CompanionMint: FC = () => {
         publicKey,
         mintInstructions.metadataUri,
         signTransaction,
-        wallet.signMessage || ((message: Uint8Array) => Promise.reject("Wallet doesn't support message signing"))
+        wallet.signMessage || (() => Promise.reject("Wallet doesn't support message signing"))
       );
       
       if (!mintResult.success) {
@@ -257,7 +257,7 @@ export const CompanionMint: FC = () => {
       
       <div className="mb-8">
         <p className="text-lg text-[#444] text-center">
-          You don't have a Solana Companion yet. Create your own digital friend that will grow with you on your blockchain journey!
+          You don&apos;t have a Solana Companion yet. Create your own digital friend that will grow with you on your blockchain journey!
         </p>
       </div>
       

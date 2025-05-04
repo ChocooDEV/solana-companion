@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
-// Game configuration for levels, evolutions, and companion images
-export const gameConfig = {
+// Define the game configuration
+const gameConfig = {
   // XP needed for each level (index = level, value = total XP needed)
   levelThresholds: [0, 100, 250, 450, 700, 1000, 1350, 1750, 2200, 2700, 3300],
   

@@ -1,32 +1,30 @@
 import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
 import { walletAdapterIdentity } from '@metaplex-foundation/umi-signer-wallet-adapters';
-import { generateSigner, createNoopSigner, publicKey } from '@metaplex-foundation/umi';
-import { create as createCoreAsset, fetchCollection, FreezeDelegatePlugin } from '@metaplex-foundation/mpl-core';
+import { generateSigner, publicKey } from '@metaplex-foundation/umi';
+import { create as createCoreAsset, fetchCollection } from '@metaplex-foundation/mpl-core';
 import { WebUploader } from "@irys/web-upload";
 import { WebSolana } from "@irys/web-upload-solana";
-import { Connection, PublicKey } from '@solana/web3.js';
-import { useWallet } from '@solana/wallet-adapter-react';
+import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { mplTokenMetadata } from '@metaplex-foundation/mpl-token-metadata';
 
 export const irysGateway = (dev: boolean) =>
   dev ? "https://devnet.irys.xyz" : "https://gateway.irys.xyz";
 
 export const getIrys = async (
-  adapter: any,
+  adapter: { publicKey: PublicKey },
   rpcUrl: string,
   devnet: boolean
 ) => {
   try {
-    // @ts-ignore - Ignore TypeScript errors from version mismatches
     let irysUploader;
     if (devnet) {
-      // @ts-ignore
+      // @ts-expect-error - Type incompatibility between different versions of Irys packages
       irysUploader = await WebUploader(WebSolana)
         .withProvider(adapter)
         .withRpc(rpcUrl)
         .devnet();
     } else {
-      // @ts-ignore
+      // @ts-expect-error - Type incompatibility between different versions of Irys packages
       irysUploader = await WebUploader(WebSolana).withProvider(adapter);
     }
 
@@ -37,7 +35,7 @@ export const getIrys = async (
   }
 };
 
-export async function uploadToIrys(wallet: any, metadata: any): Promise<string> {
+export async function uploadToIrys(wallet: { publicKey: PublicKey }, metadata: Record<string, unknown>): Promise<string> {
   try {
     // Connect to Irys using the new method
     const irys = await getIrys(
@@ -75,7 +73,7 @@ export async function mintCompanionNFT(
   connection: Connection,
   walletPublicKey: PublicKey,
   metadataUri: string,
-  signTransaction: (transaction: any) => Promise<any>,
+  signTransaction: (transaction: Transaction) => Promise<Transaction>,
   signMessage: (message: Uint8Array) => Promise<Uint8Array>
 ) {
   try {
@@ -86,18 +84,11 @@ export async function mintCompanionNFT(
     const umi = createUmi(connection.rpcEndpoint)
       .use(mplTokenMetadata());
     
-    // Create a custom signer that uses the wallet adapter
-    const signer = {
-      publicKey: publicKey(walletPublicKey.toString()),
-      signMessage,
-      signTransaction,
-    };
-    
     // Use the signer with UMI
     umi.use(walletAdapterIdentity({
       publicKey: walletPublicKey,
       signMessage,
-      signTransaction,
+      signTransaction: signTransaction as unknown as <T>(transaction: T) => Promise<T>,
     }));
     
     const asset = generateSigner(umi);

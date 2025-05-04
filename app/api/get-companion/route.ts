@@ -3,6 +3,15 @@ import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
 import { publicKey } from '@metaplex-foundation/umi';
 import { fetchAssetsByOwner } from '@metaplex-foundation/mpl-core';
 import { getRpcUrl } from '@/app/utils/solanaConnection';
+import { Companion, CompanionAttribute } from '@/app/types/companion';
+
+// Define interface for the metadata structure
+interface CompanionMetadata {
+  name?: string;
+  description?: string;
+  image?: string;
+  attributes?: CompanionAttribute[];
+}
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -44,7 +53,17 @@ export async function GET(request: NextRequest) {
     const metadataUri = firstCompanion.uri;
 
     // Initialize companion object - we'll populate it from metadata
-    let companion: any = {};
+    let companion: Companion = {
+      name: "Error please contact the team",
+      description: "Error please contact the team",
+      image: "/companions/fluffy_0.png",
+      dateOfBirth: new Date().toISOString(),
+      level: 0,
+      experience: 0,
+      evolution: 0,
+      mood: "ERROR",
+      attributes: [],
+    };
 
     // Try to fetch the metadata from the URI
     try {
@@ -78,7 +97,7 @@ export async function GET(request: NextRequest) {
         } else {
           // Try to parse the JSON
           try {
-            const metadata = await metadataResponse.json();
+            const metadata = await metadataResponse.json() as CompanionMetadata;
             console.log("Metadata:", metadata);
             
             // Populate companion with metadata values
@@ -88,12 +107,12 @@ export async function GET(request: NextRequest) {
               image: metadata.image?.startsWith('http') ? metadata.image : 
                     metadata.image?.startsWith('/') ? metadata.image : 
                     `/companions/fluffy_0.png`,
-              dateOfBirth: metadata.attributes?.find((attr: any) => attr.trait_type === "DateOfBirth")?.value || new Date().toISOString(),
-              level: parseInt(metadata.attributes?.find((attr: any) => attr.trait_type === "Level")?.value) || 0,
-              experience: parseInt(metadata.attributes?.find((attr: any) => attr.trait_type === "Experience")?.value) || 0,
-              evolution: parseInt(metadata.attributes?.find((attr: any) => attr.trait_type === "Evolution")?.value) || 0,
-              mood: metadata.attributes?.find((attr: any) => attr.trait_type === "Mood")?.value || "Neutral",
-              lastUpdated: metadata.attributes?.find((attr: any) => attr.trait_type === "LastUpdated")?.value || new Date().toISOString(), // Add this line
+              dateOfBirth: String(metadata.attributes?.find((attr: CompanionAttribute) => attr.trait_type === "DateOfBirth")?.value || new Date().toISOString()),
+              level: parseInt(String(metadata.attributes?.find((attr: CompanionAttribute) => attr.trait_type === "Level")?.value || "0")),
+              experience: parseInt(String(metadata.attributes?.find((attr: CompanionAttribute) => attr.trait_type === "Experience")?.value || "0")),
+              evolution: parseInt(String(metadata.attributes?.find((attr: CompanionAttribute) => attr.trait_type === "Evolution")?.value || "0")),
+              mood: String(metadata.attributes?.find((attr: CompanionAttribute) => attr.trait_type === "Mood")?.value || "Neutral"),
+              lastUpdated: String(metadata.attributes?.find((attr: CompanionAttribute) => attr.trait_type === "LastUpdated")?.value || new Date().toISOString()),
               attributes: metadata.attributes || [],
             };
           } catch (jsonError) {

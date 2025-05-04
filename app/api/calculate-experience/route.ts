@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PublicKey } from '@solana/web3.js';
-import { getRpcUrl } from '@/app/utils/solanaConnection';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -14,10 +12,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  try {
-    // Validate the wallet address
-    const publicKey = new PublicKey(walletAddress);
-    
+  try {    
     // Check if the companion was updated today
     let canSync = true;
     let hoursUntilNextSync = 0;
@@ -54,9 +49,6 @@ export async function GET(request: NextRequest) {
       });
     }
     
-    // Connect to Solana using the utility function
-    const rpcUrl = await getRpcUrl();
-    
     // Instead of fetching transactions directly, use the existing transactions API
     const transactionsResponse = await fetch(
       `${request.nextUrl.origin}/api/transactions?wallet=${walletAddress}`
@@ -71,7 +63,7 @@ export async function GET(request: NextRequest) {
     
     // Calculate experience points based on transaction count and types
     let experiencePoints = 0;
-    let transactionTypes = new Set();
+    const transactionTypes = new Set();
     
     // Process each transaction to calculate XP
     for (const sig of recentSignatures) {

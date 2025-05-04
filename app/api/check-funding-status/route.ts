@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Connection, PublicKey, Keypair } from '@solana/web3.js';
+import { Keypair } from '@solana/web3.js';
 import { getSolanaConnection } from '@/app/utils/solanaConnection';
 import bs58 from 'bs58';
 

@@ -1,9 +1,7 @@
-import { Connection, PublicKey } from '@solana/web3.js';
-import { Companion } from '../types/companion';
+import { Companion } from '../types/companion'; 
 
 export async function checkCompanionOwnership(
-  walletAddress: string,
-  connection: Connection
+  walletAddress: string
 ): Promise<boolean> {
   try {
     // This is a simplified check - you'll need to implement the actual logic
