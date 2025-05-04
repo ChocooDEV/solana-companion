@@ -5,6 +5,16 @@ const nextConfig: NextConfig = {
   images: {
     domains: ["i.imgur.com"],
   },
+  webpack: (config) => {
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      got: false,
+      'csv-parse': false,
+      'csv-stringify': false
+    }
+    return config;
+  }
+  
 };
 
 export default nextConfig;
