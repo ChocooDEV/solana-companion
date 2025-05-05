@@ -180,11 +180,12 @@ export const CompanionProgress: FC<CompanionProgressProps> = ({
   };
   
   useEffect(() => {
-    const handleTransactionsRefreshed = async (event: CustomEvent) => {
+    const handleTransactionsRefreshed = async (event: Event) => {
+      const customEvent = event as CustomEvent<{walletAddress: string}>;
       if (!publicKey) return;
       
       // Only refresh if this is for our wallet
-      if (event.detail.walletAddress !== publicKey.toString()) return;
+      if (customEvent.detail.walletAddress !== publicKey.toString()) return;
       
       setIsLoading(true);
       setError(null);
@@ -215,11 +216,11 @@ export const CompanionProgress: FC<CompanionProgressProps> = ({
     };
 
     // Add event listener
-    window.addEventListener('transactions-refreshed', handleTransactionsRefreshed as EventListener);
+    window.addEventListener('transactions-refreshed', handleTransactionsRefreshed);
     
     // Clean up
     return () => {
-      window.removeEventListener('transactions-refreshed', handleTransactionsRefreshed as EventListener);
+      window.removeEventListener('transactions-refreshed', handleTransactionsRefreshed);
     };
   }, [publicKey, companion.attributes]);
   
