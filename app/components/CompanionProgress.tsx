@@ -255,7 +255,7 @@ export const CompanionProgress: FC<CompanionProgressProps> = ({
             ? "No more experience points for today!" 
             : (
                 <>
-                  You've earned <span className="text-[#ff6f61] font-bold">{experiencePoints} XP</span>
+                  You&apos;ve earned <span className="text-[#ff6f61] font-bold">{experiencePoints} XP</span>
                 </>
               )
           }
