@@ -73,6 +73,12 @@ export const TransactionHistory: FC = () => {
       
       const data = await response.json();
       setTransactions(data.transactions);
+      
+      // Dispatch a custom event to notify other components that transactions were refreshed
+      const refreshEvent = new CustomEvent('transactions-refreshed', {
+        detail: { walletAddress: publicKey.toString() }
+      });
+      window.dispatchEvent(refreshEvent);
     } catch (err) {
       console.error('Error fetching transactions:', err);
       setError('Failed to load transactions. Please try again later.');

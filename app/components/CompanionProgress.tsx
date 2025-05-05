@@ -179,6 +179,50 @@ export const CompanionProgress: FC<CompanionProgressProps> = ({
     }
   };
   
+  useEffect(() => {
+    const handleTransactionsRefreshed = async (event: CustomEvent) => {
+      if (!publicKey) return;
+      
+      // Only refresh if this is for our wallet
+      if (event.detail.walletAddress !== publicKey.toString()) return;
+      
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        // Get the last updated date from companion attributes
+        const lastUpdatedAttr = companion.attributes.find(attr => attr.trait_type === "LastUpdated");
+        const lastUpdated = lastUpdatedAttr ? lastUpdatedAttr.value : null;
+        
+        // Fetch experience points with updated lastUpdated value
+        const expResponse = await fetch(`/api/calculate-experience?wallet=${publicKey.toString()}&lastUpdated=${lastUpdated || ''}`);
+        if (expResponse.ok) {
+          const expData = await expResponse.json();
+          setExperiencePoints(expData.experiencePoints);
+          
+          // If user can't sync today, show a message
+          if (expData.canSync === false) {
+            setError(expData.message);
+          } else {
+            setError(null);
+          }
+        }
+      } catch (err) {
+        console.error('Error refreshing experience data:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // Add event listener
+    window.addEventListener('transactions-refreshed', handleTransactionsRefreshed as EventListener);
+    
+    // Clean up
+    return () => {
+      window.removeEventListener('transactions-refreshed', handleTransactionsRefreshed as EventListener);
+    };
+  }, [publicKey, companion.attributes]);
+  
   if (isLoading) {
     return (
       <div className="mt-6 p-4 bg-blue-100 border border-blue-400 text-blue-700 rounded-lg flex items-center">
@@ -206,9 +250,13 @@ export const CompanionProgress: FC<CompanionProgressProps> = ({
       
       <div className="mb-6">
         <p className="text-lg font-medium text-[#333]">
-          {error?.includes("already synced") ?
-            "No more experience points for today!" :
-            `You've earned <span className="text-[#ff6f61] font-bold">{experiencePoints} XP</span>`
+          {error?.includes("already synced") 
+            ? "No more experience points for today!" 
+            : (
+                <>
+                  You've earned <span className="text-[#ff6f61] font-bold">{experiencePoints} XP</span>
+                </>
+              )
           }
         </p>
         
