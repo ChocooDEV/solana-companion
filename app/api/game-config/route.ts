@@ -10,19 +10,19 @@ const gameConfig = {
   
   companionImages: {
     "fluffy": [
-      "/companions/fluffy_0.png",
-      "/companions/fluffy_1.png",
-      "/companions/fluffy_2.png"
+      "https://i.imgur.com/G23LWPB.png",
+      "https://i.imgur.com/QfLdipz.png",
+      "https://i.imgur.com/9C4gBgT.png"
     ],
     "sparky": [
-      "/companions/sparky_0.png",
-      "/companions/sparky_1.png",
-      "/companions/sparky_2.png"
+      "https://i.imgur.com/kT3vhVB.png",
+      "https://i.imgur.com/wh0a7rD.png",
+      "https://i.imgur.com/ZllCJrP.png"
     ],
     "ember": [
-      "/companions/ember_0.png",
-      "/companions/ember_1.png",
-      "/companions/ember_2.png"
+      "https://i.imgur.com/HKXTRsf.png",
+      "https://i.imgur.com/lsi8iM2.png",
+      "https://i.imgur.com/ChMcpcb.png"
     ]
   }
 };
