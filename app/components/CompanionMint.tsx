@@ -11,19 +11,19 @@ const companionChoices: CompanionChoice[] = [
     id: 1,
     name: "Fluffy",
     image: "https://i.imgur.com/9rmNc1F.png",
-    description: "A plush-like companion covered in soft, abundant fur. Radiates coziness and turns every moment into a warm, comforting adventure"
+    description: "Fluffy, a plush-like companion covered in soft, abundant fur. Radiates coziness and turns every moment into a warm, comforting adventure"
   },
   {
     id: 2,  
     name: "Sparky",
-    image: "/companions/sparky_0.png",
-    description: "An electrifying companion that crackles with energy. Brightens any space with vibrant personality and makes every adventure more exciting"
+    image: "https://i.imgur.com/kT3vhVB.png",
+    description: "Sparky, an electrifying companion that crackles with energy. Brightens any space with vibrant personality and makes every adventure more exciting"
   },
   {
     id: 3,
     name: "Ember",
-    image: "/companions/ember_0.png",
-    description: "A blazing companion with a fiery spirit. Radiates warmth and energy, turning everyday moments into unforgettable adventures"
+    image: "https://i.imgur.com/HKXTRsf.png",
+    description: "Ember, a blazing companion with a fiery spirit. Radiates warmth and energy, turning everyday moments into unforgettable adventures"
   }
 ];
 

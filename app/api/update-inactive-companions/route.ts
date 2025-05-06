@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Create UMI instance with server wallet
-    const umi = createUmi(/*process.env.RPC_API_URL ||*/ 'https://api.devnet.solana.com');
+    const umi = createUmi(process.env.RPC_API_URL || 'https://api.devnet.solana.com');
     
     // Add Irys uploader to UMI
     umi.use(irysUploader());

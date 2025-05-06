@@ -11,11 +11,30 @@ import {
   signerIdentity,
   createSignerFromKeypair
 } from '@metaplex-foundation/umi';
-import { getRpcUrl } from '../../utils/solanaConnection';
 import { Connection, Transaction, PublicKey, SystemProgram } from '@solana/web3.js';
 import bs58 from 'bs58';
 import { irysUploader } from '@metaplex-foundation/umi-uploader-irys';
 import Irys from '@irys/sdk';
+
+// Helper function to get RPC URL from the /env route
+async function fetchRpcUrl() {
+  try {
+    const baseUrl = /*process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}` 
+      : process.env.NEXT_PUBLIC_BASE_URL ||*/ 'http://localhost:3000';
+    
+    const response = await fetch(`${baseUrl}/api/env?key=RPC_API_URL`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch RPC URL: ${response.statusText}`);
+    }
+    const data = await response.json();
+    return data.value;
+  } catch (error) {
+    console.error('Error fetching RPC URL:', error);
+    // Fallback to default or environment variable if fetch fails
+    return process.env.RPC_API_URL || 'https://api.devnet.solana.com';
+  }
+}
 
 // GET endpoint to prepare funding transaction
 export async function GET(request: NextRequest) {
@@ -27,9 +46,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Wallet address is required' }, { status: 400 });
     }
     
-    // Get RPC URL
-    const rpcUrl = await getRpcUrl();
+    // Get RPC URL from the /env route
+    const rpcUrl = await fetchRpcUrl();
     console.log('RPC URL:', rpcUrl);
+    
+    // Determine if we're using devnet or mainnet
+    const isDevnet = rpcUrl.includes('devnet') || process.env.NEXT_PUBLIC_SOLANA_NETWORK === 'devnet';
+    const irysUrl = isDevnet ? "https://devnet.irys.xyz" : "https://node1.irys.xyz";
+    
     // Create UMI instance
     const umi = createUmi(rpcUrl);
     
@@ -40,7 +64,7 @@ export async function GET(request: NextRequest) {
     
     // Calculate Irys funding amount
     const irys = new Irys({
-      url: "https://devnet.irys.xyz",
+      url: irysUrl,
       token: "solana",
       key: serverWallet.secretKey,
       config: { providerUrl: rpcUrl }
@@ -106,7 +130,12 @@ export async function POST(request: NextRequest) {
     }
     
     // 1. Setup UMI with backend wallet as update authority
-    const rpcUrl = await getRpcUrl();
+    const rpcUrl = await fetchRpcUrl();
+    
+    // Determine if we're using devnet or mainnet
+    const isDevnet = rpcUrl.includes('devnet') || process.env.NEXT_PUBLIC_SOLANA_NETWORK === 'devnet';
+    const irysUrl = isDevnet ? "https://devnet.irys.xyz" : "https://node1.irys.xyz";
+    
     const umi = createUmi(rpcUrl);
 
     // Recreate server wallet from the provided secret key
@@ -135,7 +164,7 @@ export async function POST(request: NextRequest) {
     
     // Add Irys uploader to UMI
     umi.use(irysUploader({
-      address: "https://devnet.irys.xyz",
+      address: irysUrl,
       payer: serverSigner,
     }));
     
@@ -144,9 +173,9 @@ export async function POST(request: NextRequest) {
     try {
       // Create a simple fetch function that works in Node.js environment
       const fetch = (await import('node-fetch')).default;
-      const baseUrl = process.env.VERCEL_URL 
+      const baseUrl = /*process.env.VERCEL_URL 
         ? `https://${process.env.VERCEL_URL}` 
-        : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+        : process.env.NEXT_PUBLIC_BASE_URL ||*/ 'http://localhost:3000';
       
       const configResponse = await fetch(`${baseUrl}/api/game-config`);
       if (!configResponse.ok) {
@@ -158,8 +187,35 @@ export async function POST(request: NextRequest) {
       // Continue with default values if config fetch fails
       gameConfig = {
         levelThresholds: [0, 100, 250, 450, 700, 1000, 1350, 1750, 2200, 2700, 3300],
-        evolutionThresholds: [0, 1, 3, 6, 9]
+        evolutionThresholds: [0, 3, 6]
       };
+    }
+    
+    // Get the correct image URL based on companion type and evolution
+    let imageUrl = companionData.image;
+    
+    // Extract companion type from the image URL
+    const companionType = getCompanionTypeFromDescription(companionData.description);
+    
+    if (companionType && gameConfig && gameConfig.companionImages && gameConfig.companionImages[companionType]) {
+      // Get the correct image based on evolution
+      const evolutionIndex = Math.min(
+        companionData.evolution, 
+        gameConfig.companionImages[companionType].length - 1
+      );
+      imageUrl = gameConfig.companionImages[companionType][evolutionIndex];
+    }
+    
+    // Helper function to determine companion type from description
+    function getCompanionTypeFromDescription(description: string): string | null {
+      if (description.toLowerCase().includes('sparky') || description.toLowerCase().includes('electrifying')) {
+        return 'sparky';
+      } else if (companionData.description.toLowerCase().includes('fluffy')) {
+        return 'fluffy';
+      } else if (companionData.description.toLowerCase().includes('ember')) {
+        return 'ember';
+      }
+      return 'fluffy';
     }
     
     // Calculate XP needed for next level
@@ -178,7 +234,7 @@ export async function POST(request: NextRequest) {
     const metadata = {
       name: companionData.name,
       description: companionData.description,
-      image: companionData.image,
+      image: imageUrl, // Use the updated image URL based on evolution
       attributes: [
         { trait_type: "Experience", value: companionData.experience.toString() },
         { trait_type: "Level", value: companionData.level.toString() },
@@ -192,9 +248,35 @@ export async function POST(request: NextRequest) {
         )
       ]
     };
+   
+    // Try a simpler approach to upload JSON
+    let metadataUri;
+    try {
+      // First attempt with UMI uploader
+      metadataUri = await umi.uploader.uploadJson(metadata);
+    } catch (uploadError) {
+      console.log('UMI uploader failed, falling back to direct Irys upload:', uploadError);
+      
+      // Fallback to direct Irys upload if UMI uploader fails
+      const irys = new Irys({
+        url: irysUrl,
+        token: "solana",
+        key: serverWallet.secretKey,
+        config: { providerUrl: rpcUrl }
+      });
+      
+      const metadataBuffer = Buffer.from(JSON.stringify(metadata));
+      const uploadResponse = await irys.upload(metadataBuffer, {
+        tags: [{ name: "Content-Type", value: "application/json" }]
+      });
+      
+      console.log('Upload response id:', uploadResponse.id);
+      // Use the correct URL based on environment (devnet vs mainnet)
+      metadataUri = isDevnet 
+        ? `https://devnet.irys.xyz/${uploadResponse.id}`
+        : `https://arweave.net/${uploadResponse.id}`;
+    }
     
-    console.log('Uploading metadata with server wallet:', serverWallet.publicKey);
-    const metadataUri = await umi.uploader.uploadJson(metadata);
     console.log('Metadata uploaded successfully to:', metadataUri);
     
     // 3. Fetch the asset
@@ -206,7 +288,6 @@ export async function POST(request: NextRequest) {
     if (collectionAddress) {
       try {
         collection = await fetchCollection(umi, publicKey(collectionAddress));
-        console.log('Collection fetched:', collection);
       } catch (error) {
         console.error('Error fetching collection:', error);
         return NextResponse.json({ 
@@ -260,8 +341,8 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Transaction signature and asset address are required' }, { status: 400 });
     }
     
-    // Use the utility function to get RPC URL
-    const rpcUrl = await getRpcUrl();
+    // Use the helper function to get RPC URL
+    const rpcUrl = await fetchRpcUrl();
     
     // Create a Connection instance to check the transaction status
     const connection = new Connection(rpcUrl, 'confirmed');

@@ -21,17 +21,37 @@ export async function GET(request: NextRequest) {
       const lastUpdated = new Date(lastUpdatedStr);
       const now = new Date();
       
-      // Check if the last update was today (same day)
-      const lastUpdateDay = lastUpdated.toDateString();
-      const todayDay = now.toDateString();
+      // Fix: Use UTC methods to properly compare dates regardless of timezone
+      const lastUpdateDay = lastUpdated.getUTCDate();
+      const lastUpdateMonth = lastUpdated.getUTCMonth();
+      const lastUpdateYear = lastUpdated.getUTCFullYear();
       
-      if (lastUpdateDay === todayDay) {
+      const todayDay = now.getUTCDate();
+      const todayMonth = now.getUTCMonth();
+      const todayYear = now.getUTCFullYear();
+      
+      // Check if the last update was today (same day, month, and year)
+      const isSameDay = lastUpdateDay === todayDay && 
+                        lastUpdateMonth === todayMonth && 
+                        lastUpdateYear === todayYear;
+      
+      // Get dateOfBirth from query params
+      const dateOfBirthStr = searchParams.get('dateOfBirth');
+      const dateOfBirth = dateOfBirthStr ? new Date(dateOfBirthStr) : null;
+      
+      // Allow sync if this is the first day AND we haven't synced yet after minting
+      // We compare the exact timestamps to see if lastUpdated equals dateOfBirth (meaning no sync after mint)
+      const isFirstDayFirstSync = dateOfBirth && 
+                                 dateOfBirth.toDateString() === now.toDateString() && 
+                                 Math.abs(dateOfBirth.getTime() - lastUpdated.getTime()) < 1000; // Within 1 second
+      
+      if (isSameDay && !isFirstDayFirstSync) {
         canSync = false;
         
-        // Calculate hours until next sync (midnight)
+        // Calculate hours until next sync (midnight UTC)
         const tomorrow = new Date(now);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        tomorrow.setHours(0, 0, 0, 0);
+        tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+        tomorrow.setUTCHours(0, 0, 0, 0);
         
         const hoursRemaining = (tomorrow.getTime() - now.getTime()) / (1000 * 60 * 60);
         hoursUntilNextSync = Math.ceil(hoursRemaining);
@@ -45,7 +65,9 @@ export async function GET(request: NextRequest) {
         experiencePoints: 0,
         canSync: false,
         message: `You've already synced today. You can sync again in ${hoursUntilNextSync} hours.`,
-        hoursUntilNextSync
+        hoursUntilNextSync,
+        lastUpdated: lastUpdatedStr,
+        currentTime: new Date().toISOString()
       });
     }
     

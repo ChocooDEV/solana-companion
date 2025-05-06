@@ -6,7 +6,7 @@ const gameConfig = {
   levelThresholds: [0, 100, 250, 450, 700, 1000, 1350, 1750, 2200, 2700, 3300],
   
   // Level thresholds for each evolution
-  evolutionThresholds: [0, 1, 3, 6, 9],
+  evolutionThresholds: [0, 3, 6],
   
   companionImages: {
     "fluffy": [

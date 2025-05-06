@@ -37,11 +37,14 @@ export const getIrys = async (
 
 export async function uploadToIrys(wallet: { publicKey: PublicKey }, metadata: Record<string, unknown>): Promise<string> {
   try {
+    const rpcUrl = process.env.RPC_API_URL || 'https://api.devnet.solana.com';
+    const isDevnet = rpcUrl.includes('devnet');
+    
     // Connect to Irys using the new method
     const irys = await getIrys(
       wallet, 
-      /*process.env.RPC_API_URL || */'https://api.devnet.solana.com', 
-      true // Using devnet
+      rpcUrl, 
+      isDevnet
     );
     
     // Convert metadata to buffer

@@ -31,8 +31,8 @@ export async function GET(request: NextRequest) {
 
   try {
     // Connect to Solana using Helius RPC endpoint from .env
-    const connection = new Connection(/*process.env.RPC_API_URL ||*/ 'https://api.devnet.solana.com', 'confirmed'); //TODO CHANGE
-    
+    const connection = new Connection(process.env.RPC_API_URL || 'https://api.devnet.solana.com', 'confirmed');
+    console.log("using rpc: ", process.env.RPC_API_URL);
     // Fetch the transaction details
     const transaction = await connection.getParsedTransaction(signature, {
       maxSupportedTransactionVersion: 0,

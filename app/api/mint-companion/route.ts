@@ -8,6 +8,26 @@ import { getRpcUrl } from '../../utils/solanaConnection';
 import bs58 from 'bs58';
 import { Transaction as UmiTransaction } from '@metaplex-foundation/umi';
 
+// Helper function to get RPC URL from the /env route
+async function fetchRpcUrl() {
+  const baseUrl = /*process.env.VERCEL_URL 
+  ? `https://${process.env.VERCEL_URL}` 
+  : process.env.NEXT_PUBLIC_BASE_URL ||*/ 'http://localhost:3000';
+
+  try {
+    const response = await fetch(`${baseUrl}/api/env?key=RPC_API_URL`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch RPC URL: ${response.statusText}`);
+    }
+    const data = await response.json();
+    return data.value;
+  } catch (error) {
+    console.error('Error fetching RPC URL:', error);
+    // Fallback to default or environment variable if fetch fails
+    return process.env.RPC_API_URL || 'https://api.devnet.solana.com';
+  }
+}
+
 // Step 1: Get funding transaction
 export async function GET(request: NextRequest) {
   try {
@@ -17,8 +37,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Wallet address is required' }, { status: 400 });
     }
     
-    // Use the utility function to get RPC URL
-    const rpcUrl = await getRpcUrl();
+    // Get RPC URL from the /env route
+    const rpcUrl = await fetchRpcUrl();
+    
+    // Determine if we're using devnet or mainnet
+    const isDevnet = rpcUrl.includes('devnet') || process.env.NEXT_PUBLIC_SOLANA_NETWORK === 'devnet';
+    const irysUrl = isDevnet ? "https://devnet.irys.xyz" : "https://node1.irys.xyz";
     
     // Use server wallet from .env instead of generating a new one
     const umi = createUmi(rpcUrl);
@@ -33,7 +57,7 @@ export async function GET(request: NextRequest) {
     
     // Calculate Irys funding amount
     const irys = new Irys({
-      url: "https://devnet.irys.xyz",
+      url: irysUrl,
       token: "solana",
       key: keypair.secretKey,
       config: { providerUrl: rpcUrl }
@@ -94,8 +118,12 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
     
-    // Use the utility function to get RPC URL
-    const rpcUrl = await getRpcUrl();
+    // Get RPC URL from the /env route
+    const rpcUrl = await fetchRpcUrl();
+    
+    // Determine if we're using devnet or mainnet
+    const isDevnet = rpcUrl.includes('devnet');
+    const irysUrl = isDevnet ? "https://devnet.irys.xyz" : "https://node1.irys.xyz";
     
     // Use server wallet from .env
     const umi = createUmi(rpcUrl);
@@ -159,7 +187,7 @@ export async function POST(request: NextRequest) {
     
     // Add Irys uploader to UMI
     umi.use(irysUploader({
-      address: "https://devnet.irys.xyz",
+      address: irysUrl,
       payer: serverSigner,
     }));
     
@@ -183,9 +211,25 @@ export async function POST(request: NextRequest) {
     try {
       console.log('Attempting to upload metadata with server wallet:', serverWallet.publicKey);
       
-      // Upload metadata to Irys
-      const metadataUri = await umi.uploader.uploadJson(metadata);
-      console.log('Metadata uploaded successfully to:', metadataUri);
+      // Create an Irys instance directly instead of using umi.uploader
+      const irys = new Irys({
+        url: irysUrl,
+        token: "solana",
+        key: serverWallet.secretKey,
+        config: { providerUrl: rpcUrl }
+      });
+      
+      // Upload metadata using Irys directly
+      const uploadResponse = await irys.upload(JSON.stringify(metadata), {
+        tags: [{ name: "Content-Type", value: "application/json" }]
+      });
+      
+      console.log('Metadata uploaded successfully to:', uploadResponse.id);
+      
+      // Use the correct URL based on environment (devnet vs mainnet)
+      const metadataUri = isDevnet 
+        ? `https://devnet.irys.xyz/${uploadResponse.id}`
+        : `https://arweave.net/${uploadResponse.id}`;
       
       // Return the metadata URI for the client to use for minting
       return NextResponse.json({ 
@@ -259,8 +303,8 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Transaction signature and asset address are required' }, { status: 400 });
     }
     
-    // Use the utility function to get RPC URL
-    const rpcUrl = await getRpcUrl();
+    // Get RPC URL from the /env route
+    const rpcUrl = await fetchRpcUrl();
     
     // Create a Connection instance to check the transaction status
     const connection = new Connection(rpcUrl, 'confirmed');

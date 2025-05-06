@@ -123,8 +123,7 @@ export async function GET(request: NextRequest) {
       }
     } catch (error) {
       console.error("Error fetching metadata:", error);
-      // Removed fallback data - now we'll just throw the error
-      throw error; // This will be caught by the outer try/catch
+      throw error; 
     }
 
     // Return the companion and mint address
