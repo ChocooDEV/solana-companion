@@ -19,9 +19,9 @@ import Irys from '@irys/sdk';
 // Helper function to get RPC URL from the /env route
 async function fetchRpcUrl() {
   try {
-    const baseUrl = /*process.env.VERCEL_URL 
+    const baseUrl = process.env.VERCEL_URL 
       ? `https://${process.env.VERCEL_URL}` 
-      : process.env.NEXT_PUBLIC_BASE_URL ||*/ 'http://localhost:3000';
+      : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
     
     const response = await fetch(`${baseUrl}/api/env?key=RPC_API_URL`);
     if (!response.ok) {
@@ -173,9 +173,9 @@ export async function POST(request: NextRequest) {
     try {
       // Create a simple fetch function that works in Node.js environment
       const fetch = (await import('node-fetch')).default;
-      const baseUrl = /*process.env.VERCEL_URL 
+      const baseUrl = process.env.VERCEL_URL 
         ? `https://${process.env.VERCEL_URL}` 
-        : process.env.NEXT_PUBLIC_BASE_URL ||*/ 'http://localhost:3000';
+        : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
       
       const configResponse = await fetch(`${baseUrl}/api/game-config`);
       if (!configResponse.ok) {
