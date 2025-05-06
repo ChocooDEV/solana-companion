@@ -80,8 +80,14 @@ export const CompanionProgress: FC<CompanionProgressProps> = ({
         const lastUpdatedAttr = companion.attributes.find(attr => attr.trait_type === "LastUpdated");
         const lastUpdated = lastUpdatedAttr ? lastUpdatedAttr.value : null;
         
+        // Get the date of birth from companion attributes
+        const dateOfBirthAttr = companion.attributes.find(attr => attr.trait_type === "DateOfBirth");
+        const dateOfBirth = dateOfBirthAttr ? dateOfBirthAttr.value : null;
+        
         // Fetch experience points
-        const expResponse = await fetch(`/api/calculate-experience?wallet=${publicKey.toString()}&lastUpdated=${lastUpdated || ''}`);
+        const expResponse = await fetch(
+          `/api/calculate-experience?wallet=${publicKey.toString()}&lastUpdated=${lastUpdated || ''}&dateOfBirth=${dateOfBirth || ''}`
+        );
         if (!expResponse.ok) {
           throw new Error('Failed to calculate experience points');
         }
@@ -154,8 +160,14 @@ export const CompanionProgress: FC<CompanionProgressProps> = ({
             const lastUpdatedAttr = updatedCompanion.attributes.find(attr => attr.trait_type === "LastUpdated");
             const lastUpdated = lastUpdatedAttr ? lastUpdatedAttr.value : null;
             
+            // Get the date of birth from companion attributes
+            const dateOfBirthAttr = updatedCompanion.attributes.find(attr => attr.trait_type === "DateOfBirth");
+            const dateOfBirth = dateOfBirthAttr ? dateOfBirthAttr.value : null;
+            
             // Fetch experience points with updated lastUpdated value
-            const expResponse = await fetch(`/api/calculate-experience?wallet=${publicKey.toString()}&lastUpdated=${lastUpdated || ''}`);
+            const expResponse = await fetch(
+              `/api/calculate-experience?wallet=${publicKey.toString()}&lastUpdated=${lastUpdated || ''}&dateOfBirth=${dateOfBirth || ''}`
+            );
             if (expResponse.ok) {
               const expData = await expResponse.json();
               // This should be 0 if we just synced, but we update it anyway
@@ -195,8 +207,14 @@ export const CompanionProgress: FC<CompanionProgressProps> = ({
         const lastUpdatedAttr = companion.attributes.find(attr => attr.trait_type === "LastUpdated");
         const lastUpdated = lastUpdatedAttr ? lastUpdatedAttr.value : null;
         
+        // Get the date of birth from companion attributes
+        const dateOfBirthAttr = companion.attributes.find(attr => attr.trait_type === "DateOfBirth");
+        const dateOfBirth = dateOfBirthAttr ? dateOfBirthAttr.value : null;
+        
         // Fetch experience points with updated lastUpdated value
-        const expResponse = await fetch(`/api/calculate-experience?wallet=${publicKey.toString()}&lastUpdated=${lastUpdated || ''}`);
+        const expResponse = await fetch(
+          `/api/calculate-experience?wallet=${publicKey.toString()}&lastUpdated=${lastUpdated || ''}&dateOfBirth=${dateOfBirth || ''}`
+        );
         if (expResponse.ok) {
           const expData = await expResponse.json();
           setExperiencePoints(expData.experiencePoints);

@@ -177,7 +177,7 @@ export const CompanionDisplay: FC = () => {
               className="bg-[#ff6f61] h-2.5 rounded-md" 
               style={{ 
                 width: `${companion.xpForNextLevel ? 
-                  Math.min((companion.experience / companion.xpForNextLevel) * 100, 100) : 0}%` 
+                  Math.min((companion.experience / (companion.experience + companion.xpForNextLevel)) * 100, 100) : 0}%` 
               }}
             ></div>
           </div>
