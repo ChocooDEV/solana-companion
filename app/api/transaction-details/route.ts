@@ -70,6 +70,7 @@ export async function GET(request: NextRequest) {
       console.error('Error using Helius AI Explainer:', error);
     }
     
+
     // Return combined data with clearer structure
     return NextResponse.json({
       type: type === "Unknown" ? "Generic" : type,
@@ -285,13 +286,13 @@ async function getHeliusAIExplanation(
       },
       body: JSON.stringify(payload)
     });
-
+    
     if (!response.ok) {
       throw new Error(`Helius AI Explainer API error: ${response.statusText}`);
     }
 
     const data = await response.json();
-    
+
     // Extract the content from the response
     if (data && data.content) {
       // Handle structured object response
@@ -334,6 +335,7 @@ async function getHeliusAIExplanation(
         
         const summary = content
           .replace(/^#.*\n/, '')
+          .replace(/<address>(.*?)<\/address>/g, '$1')
           .replace(/[•*]/g, '')
           .replace(/\.$/, '')
           .trim();

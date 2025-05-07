@@ -9,9 +9,9 @@ import { Transaction as UmiTransaction } from '@metaplex-foundation/umi';
 
 // Helper function to get RPC URL from the /env route
 async function fetchRpcUrl() {
-  const baseUrl = process.env.VERCEL_URL 
+  const baseUrl = /*process.env.VERCEL_URL 
   ? `https://${process.env.VERCEL_URL}` 
-  : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  : process.env.NEXT_PUBLIC_BASE_URL ||*/ 'http://localhost:3000';
 
   try {
     const response = await fetch(`${baseUrl}/api/env?key=RPC_API_URL`);

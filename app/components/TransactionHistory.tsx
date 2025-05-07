@@ -66,7 +66,7 @@ export const TransactionHistory: FC = () => {
 
     try {
       const response = await fetch(`/api/transactions?wallet=${publicKey.toString()}`);
-      
+      console.log("response: ", response);
       if (!response.ok) {
         throw new Error('Failed to fetch transactions');
       }
@@ -267,7 +267,9 @@ export const TransactionHistory: FC = () => {
                           )}
                         </td>
                         <td className="px-6 py-4 text-sm max-w-[200px] break-words text-[#444]">
-                          {transactionDetails[tx.signature]?.summary || 'No summary available'}
+                          {transactionDetails[tx.signature]?.additionalContext 
+                            ? transactionDetails[tx.signature]?.summary || 'No summary available'
+                            : transactionDetails[tx.signature]?.type || 'Unknown'}
                         </td>
                         <td className="px-6 py-4 text-sm whitespace-nowrap text-[#444]">
                           {tx.blockTime ? new Date(tx.blockTime * 1000).toLocaleDateString() : 'N/A'}
@@ -283,12 +285,15 @@ export const TransactionHistory: FC = () => {
                                 </ul>
                               </div>
                             )}
-                            {transactionDetails[tx.signature]?.additionalContext && (
+                            {transactionDetails[tx.signature]?.additionalContext ? (
                               <div className="mt-2 pt-2 border-t border-gray-200">
                                 {transactionDetails[tx.signature]?.additionalContext}
                               </div>
+                            ) : (
+                              <div>{transactionDetails[tx.signature]?.summary || 'No summary available'}</div>
                             )}
                             {!transactionDetails[tx.signature]?.keyPoints && 
+                             !transactionDetails[tx.signature]?.summary && 
                              !transactionDetails[tx.signature]?.additionalContext && 
                              'No detailed information available'}
                           </div>
