@@ -7,7 +7,6 @@ import { useEffect, useState } from "react";
 
 export default function TransactionsPage() {
   const [network, setNetwork] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Fetch the RPC URL to determine if we're on devnet
@@ -27,8 +26,6 @@ export default function TransactionsPage() {
         console.error('Error fetching network info:', error);
         // Default to devnet if there's an error
         setNetwork('devnet');
-      } finally {
-        setLoading(false);
       }
     };
 
