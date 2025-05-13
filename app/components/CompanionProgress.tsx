@@ -154,7 +154,7 @@ export const CompanionProgress: FC<CompanionProgressProps> = ({
         setExperiencePoints(0);
         
         // Refresh the component data
-        const fetchUpdatedData = async () => {
+        /*const fetchUpdatedData = async () => {
           try {
             // Get the last updated date from companion attributes
             const lastUpdatedAttr = updatedCompanion.attributes.find(attr => attr.trait_type === "LastUpdated");
@@ -178,7 +178,12 @@ export const CompanionProgress: FC<CompanionProgressProps> = ({
           }
         };
         
-        fetchUpdatedData();
+        fetchUpdatedData();*/
+
+        // Refresh the page after successful sync
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500); // Short delay to show success message
       } else {
         throw new Error(result.message);
       }
